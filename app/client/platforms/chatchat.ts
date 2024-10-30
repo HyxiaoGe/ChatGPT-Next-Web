@@ -81,7 +81,7 @@ export class CHATCHATApi implements LLMApi {
 
     const requestPayload: RequestPayload = {
       messages,
-      stream: options.config.stream,
+      stream: true,
       model: modelConfig.model,
       temperature: modelConfig.temperature,
       presence_penalty: modelConfig.presence_penalty,
@@ -125,7 +125,7 @@ export class CHATCHATApi implements LLMApi {
           controller,
           // parseSSE
           (text: string, runTools: ChatMessageTool[]) => {
-            // console.log("parseSSE", text, runTools);
+            console.log("parseSSE", text, runTools);
             const json = JSON.parse(text);
             const choices = json.choices as Array<{
               delta: {

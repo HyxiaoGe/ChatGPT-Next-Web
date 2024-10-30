@@ -309,15 +309,21 @@ export function stream(
           responseText = await res.clone().text();
           return finish();
         }
-
+        console.log("contentType is not text/plain");
         if (
           !res.ok ||
+          !res.body ||
+          res.body instanceof ReadableStream ||
+          res.status !== 200 ||
           !res.headers
             .get("content-type")
-            ?.startsWith(EventStreamContentType) ||
-          res.status !== 200
+            ?.toLowerCase()
+            .includes(EventStreamContentType)
         ) {
+          console.log("----------------------------------------------------");
           const responseTexts = [responseText];
+          console.log("[ChatAPI] response content type: ");
+          console.log(responseTexts);
           let extraInfo = await res.clone().text();
           try {
             const resJson = await res.clone().json();
@@ -338,6 +344,8 @@ export function stream(
         }
       },
       onmessage(msg) {
+        console.log("-----------------msg----------------------");
+        console.log(msg);
         if (msg.data === "[DONE]" || finished) {
           return finish();
         }
