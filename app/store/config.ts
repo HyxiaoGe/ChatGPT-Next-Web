@@ -63,8 +63,8 @@ export const DEFAULT_CONFIG = {
   models: DEFAULT_MODELS as any as LLMModel[],
 
   modelConfig: {
-    model: "gpt-4o-mini" as ModelType,
-    providerName: "OpenAI" as ServiceProvider,
+    model: "qwen1.5-chat" as ModelType,
+    providerName: "chatchat" as ServiceProvider,
     temperature: 0.5,
     top_p: 1,
     max_tokens: 4000,

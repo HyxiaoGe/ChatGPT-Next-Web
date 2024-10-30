@@ -23,7 +23,6 @@ import {
   Route,
   useLocation,
 } from "react-router-dom";
-import { SideBar } from "./sidebar";
 import { useAppConfig } from "../store/config";
 import { AuthPage } from "./auth";
 import { getClientConfig } from "../config/client";
@@ -179,16 +178,16 @@ function Screen() {
     if (isSdNew) return <Sd />;
     return (
       <>
-        <SideBar className={isHome ? styles["sidebar-show"] : ""} />
+        {/*<SideBar className={isHome ? styles["sidebar-show"] : ""} />*/}
         <WindowContent>
           <Routes>
             <Route path={Path.Home} element={<Chat />} />
-            <Route path={Path.NewChat} element={<NewChat />} />
-            <Route path={Path.Masks} element={<MaskPage />} />
-            <Route path={Path.Plugins} element={<PluginPage />} />
-            <Route path={Path.SearchChat} element={<SearchChat />} />
-            <Route path={Path.Chat} element={<Chat />} />
-            <Route path={Path.Settings} element={<Settings />} />
+            {/*<Route path={Path.NewChat} element={<NewChat />} />*/}
+            {/*<Route path={Path.Masks} element={<MaskPage />} />*/}
+            {/*<Route path={Path.Plugins} element={<PluginPage />} />*/}
+            {/*<Route path={Path.SearchChat} element={<SearchChat />} />*/}
+            {/*<Route path={Path.Chat} element={<Chat />} />*/}
+            {/*<Route path={Path.Settings} element={<Settings />} />*/}
           </Routes>
         </WindowContent>
       </>

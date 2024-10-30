@@ -150,7 +150,7 @@ function fillTemplateWith(input: string, modelConfig: ModelConfig) {
   // Find the model in the DEFAULT_MODELS array that matches the modelConfig.model
   const modelInfo = DEFAULT_MODELS.find((m) => m.name === modelConfig.model);
 
-  var serviceProvider = "OpenAI";
+  var serviceProvider = "chatchat";
   if (modelInfo) {
     // TODO: auto detect the providerName from the modelConfig.model
 
@@ -411,6 +411,7 @@ export const useChatStore = createPersistStore(
         });
 
         const api: ClientApi = getClientApi(modelConfig.providerName);
+        console.log("providerName: ", modelConfig.providerName);
         // make request
         api.llm.chat({
           messages: sendMessages,

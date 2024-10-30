@@ -30,6 +30,8 @@ export const IFLYTEK_BASE_URL = "https://spark-api-open.xf-yun.com";
 
 export const XAI_BASE_URL = "https://api.x.ai";
 
+export const CHATCHAT_BASE_URL = "http://192.168.250.122:7861";
+
 export const CACHE_URL_PREFIX = "/api/cache";
 export const UPLOAD_URL = `${CACHE_URL_PREFIX}/upload`;
 
@@ -62,6 +64,7 @@ export enum ApiPath {
   Stability = "/api/stability",
   Artifacts = "/api/artifacts",
   XAI = "/api/xai",
+  CHATCHAT = "",
 }
 
 export enum SlotID {
@@ -115,6 +118,7 @@ export enum ServiceProvider {
   Stability = "Stability",
   Iflytek = "Iflytek",
   XAI = "XAI",
+  CHATCHAT = "chatchat",
 }
 
 // Google API safety settings, see https://ai.google.dev/gemini-api/docs/safety-settings
@@ -138,6 +142,7 @@ export enum ModelProvider {
   Moonshot = "Moonshot",
   Iflytek = "Iflytek",
   XAI = "XAI",
+  CHATCHAT = "chatchat",
 }
 
 export const Stability = {
@@ -225,6 +230,11 @@ export const XAI = {
   ChatPath: "v1/chat/completions",
 };
 
+export const CHATCHAT = {
+  ExampleEndpoint: CHATCHAT_BASE_URL,
+  ChatPath: "/chat/completions",
+};
+
 export const DEFAULT_INPUT_TEMPLATE = `{{input}}`; // input / time / model / lang
 // export const DEFAULT_SYSTEM_TEMPLATE = `
 // You are ChatGPT, a large language model trained by {{ServiceProvider}}.
@@ -279,6 +289,8 @@ export const DEFAULT_TTS_VOICES = [
   "nova",
   "shimmer",
 ];
+
+const chatchatModels = ["qwen1.5-chat"];
 
 const openaiModels = [
   "gpt-3.5-turbo",
@@ -497,6 +509,17 @@ export const DEFAULT_MODELS = [
       providerName: "XAI",
       providerType: "xai",
       sorted: 11,
+    },
+  })),
+  ...chatchatModels.map((name) => ({
+    name,
+    available: true,
+    sorted: seq++,
+    provider: {
+      id: "chatchat",
+      providerName: "CHATCHAT",
+      providerType: "chatchat",
+      sorted: 12,
     },
   })),
 ] as const;

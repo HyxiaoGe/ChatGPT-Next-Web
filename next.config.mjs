@@ -63,6 +63,7 @@ if (mode !== "export") {
   };
 
   nextConfig.rewrites = async () => {
+    console.log('Configuring rewrites...');
     const ret = [
       // adjust for previous version directly using "/api/proxy/" as proxy base route
       // {
@@ -93,6 +94,11 @@ if (mode !== "export") {
       {
         source: "/sharegpt",
         destination: "https://sharegpt.com/api/conversations",
+      },
+      {
+        source: '/chat/:path*',
+        destination: 'http://192.168.250.122:7861/chat/:path*',
+        basePath: false,
       },
     ];
 

@@ -72,6 +72,7 @@ import {
   Stability,
   Iflytek,
   SAAS_CHAT_URL,
+  CHATCHAT,
 } from "../constant";
 import { Prompt, SearchService, usePromptStore } from "../store/prompt";
 import { ErrorBoundary } from "./error";
@@ -1234,6 +1235,47 @@ export function Settings() {
     </>
   );
 
+  const XChatChatConfigComponent = accessStore.provider ===
+    ServiceProvider.CHATCHAT && (
+    <>
+      <ListItem
+        title={Locale.Settings.Access.CHATCHAT.Endpoint.Title}
+        subTitle={
+          Locale.Settings.Access.CHATCHAT.Endpoint.SubTitle +
+          CHATCHAT.ExampleEndpoint
+        }
+      >
+        <input
+          aria-label={Locale.Settings.Access.CHATCHAT.Endpoint.Title}
+          type="text"
+          value={accessStore.chatchatUrl}
+          placeholder={CHATCHAT.ExampleEndpoint}
+          onChange={(e) =>
+            accessStore.update(
+              (access) => (access.chatchatUrl = e.currentTarget.value),
+            )
+          }
+        ></input>
+      </ListItem>
+      <ListItem
+        title={Locale.Settings.Access.CHATCHAT.ApiKey.Title}
+        subTitle={Locale.Settings.Access.CHATCHAT.ApiKey.SubTitle}
+      >
+        <PasswordInput
+          aria-label={Locale.Settings.Access.CHATCHAT.ApiKey.Title}
+          value={accessStore.xaiApiKey}
+          type="text"
+          placeholder={Locale.Settings.Access.CHATCHAT.ApiKey.Placeholder}
+          onChange={(e) => {
+            accessStore.update(
+              (access) => (access.chatchatApiKey = e.currentTarget.value),
+            );
+          }}
+        />
+      </ListItem>
+    </>
+  );
+
   const stabilityConfigComponent = accessStore.provider ===
     ServiceProvider.Stability && (
     <>
@@ -1693,6 +1735,7 @@ export function Settings() {
                   {stabilityConfigComponent}
                   {lflytekConfigComponent}
                   {XAIConfigComponent}
+                  {XChatChatConfigComponent}
                 </>
               )}
             </>

@@ -21,6 +21,7 @@ import { HunyuanApi } from "./platforms/tencent";
 import { MoonshotApi } from "./platforms/moonshot";
 import { SparkApi } from "./platforms/iflytek";
 import { XAIApi } from "./platforms/xai";
+import { CHATCHATApi } from "@/app/client/platforms/chatchat";
 
 export const ROLES = ["system", "user", "assistant"] as const;
 export type MessageRole = (typeof ROLES)[number];
@@ -103,7 +104,7 @@ export abstract class LLMApi {
   abstract models(): Promise<LLMModel[]>;
 }
 
-type ProviderName = "openai" | "azure" | "claude" | "palm";
+type ProviderName = "openai" | "azure" | "claude" | "palm" | "chatchat";
 
 interface Model {
   name: string;
@@ -155,6 +156,9 @@ export class ClientApi {
         break;
       case ModelProvider.XAI:
         this.llm = new XAIApi();
+        break;
+      case ModelProvider.CHATCHAT:
+        this.llm = new CHATCHATApi();
         break;
       default:
         this.llm = new ChatGPTApi();
@@ -338,6 +342,8 @@ export function getClientApi(provider: ServiceProvider): ClientApi {
       return new ClientApi(ModelProvider.Iflytek);
     case ServiceProvider.XAI:
       return new ClientApi(ModelProvider.XAI);
+    case ServiceProvider.CHATCHAT:
+      return new ClientApi(ModelProvider.CHATCHAT);
     default:
       return new ClientApi(ModelProvider.GPT);
   }

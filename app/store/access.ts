@@ -14,6 +14,7 @@ import {
   STABILITY_BASE_URL,
   IFLYTEK_BASE_URL,
   XAI_BASE_URL,
+  CHATCHAT_BASE_URL,
 } from "../constant";
 import { getHeaders } from "../client/api";
 import { getClientConfig } from "../config/client";
@@ -47,11 +48,13 @@ const DEFAULT_IFLYTEK_URL = isApp ? IFLYTEK_BASE_URL : ApiPath.Iflytek;
 
 const DEFAULT_XAI_URL = isApp ? XAI_BASE_URL : ApiPath.XAI;
 
+const DEFAULT_CHATCHAT_URL = isApp ? CHATCHAT_BASE_URL : ApiPath.CHATCHAT;
+
 const DEFAULT_ACCESS_STATE = {
   accessCode: "",
   useCustomConfig: false,
 
-  provider: ServiceProvider.OpenAI,
+  provider: ServiceProvider.CHATCHAT,
 
   // openai
   openaiUrl: DEFAULT_OPENAI_URL,
@@ -107,6 +110,10 @@ const DEFAULT_ACCESS_STATE = {
   // xai
   xaiUrl: DEFAULT_XAI_URL,
   xaiApiKey: "",
+
+  // chatchat
+  chatchatUrl: DEFAULT_CHATCHAT_URL,
+  chatchatApiKey: "",
 
   // server config
   needCode: true,
