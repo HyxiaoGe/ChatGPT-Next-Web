@@ -50,8 +50,6 @@ export class CHATCHATApi implements LLMApi {
       baseUrl = "https://" + baseUrl;
     }
 
-    console.log("[Proxy Endpoint] ", baseUrl, path);
-
     return [baseUrl, path].join("");
   }
 
@@ -89,12 +87,11 @@ export class CHATCHATApi implements LLMApi {
       top_p: modelConfig.top_p,
     };
 
-    console.log("[Request] chatchat payload: ", requestPayload);
+    // console.log("[Request] chatchat payload: ", requestPayload);
 
     const shouldStream = !!options.config.stream;
     const controller = new AbortController();
     options.onController?.(controller);
-
     try {
       const chatPath = this.path(CHATCHAT.ChatPath);
       const chatPayload = {
@@ -103,13 +100,11 @@ export class CHATCHATApi implements LLMApi {
         signal: controller.signal,
         headers: getHeaders(),
       };
-
       // make a fetch request
       const requestTimeoutId = setTimeout(
         () => controller.abort(),
         REQUEST_TIMEOUT_MS,
       );
-
       if (shouldStream) {
         const [tools, funcs] = usePluginStore
           .getState()
@@ -133,6 +128,7 @@ export class CHATCHATApi implements LLMApi {
                 tool_calls: ChatMessageTool[];
               };
             }>;
+
             const tool_calls = choices[0]?.delta?.tool_calls;
             if (tool_calls?.length > 0) {
               const index = tool_calls[0]?.index;
@@ -180,7 +176,7 @@ export class CHATCHATApi implements LLMApi {
         options.onFinish(message);
       }
     } catch (e) {
-      console.log("[Request] failed to make a chat request", e);
+      console.log("[Request] chatchat failed to make a chat request", e);
       options.onError?.(e as Error);
     }
   }

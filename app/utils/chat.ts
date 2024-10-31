@@ -177,7 +177,11 @@ export function stream(
 
   // animate response to make it looks smooth
   function animateResponseText() {
+    console.log(
+      "---------------------------animateResponseText-------------------------------",
+    );
     if (finished || controller.signal.aborted) {
+      console.log("remainText", remainText);
       responseText += remainText;
       console.log("[Response Animation] finished");
       if (responseText?.length === 0) {
@@ -185,7 +189,6 @@ export function stream(
       }
       return;
     }
-
     if (remainText.length > 0) {
       const fetchCount = Math.max(1, Math.round(remainText.length / 60));
       const fetchText = remainText.slice(0, fetchCount);
@@ -196,86 +199,20 @@ export function stream(
 
     requestAnimationFrame(animateResponseText);
   }
-
   // start animaion
   animateResponseText();
 
-  const finish = () => {
-    if (!finished) {
-      if (!running && runTools.length > 0) {
-        const toolCallMessage = {
-          role: "assistant",
-          tool_calls: [...runTools],
-        };
-        running = true;
-        runTools.splice(0, runTools.length); // empty runTools
-        return Promise.all(
-          toolCallMessage.tool_calls.map((tool) => {
-            options?.onBeforeTool?.(tool);
-            return Promise.resolve(
-              // @ts-ignore
-              funcs[tool.function.name](
-                // @ts-ignore
-                tool?.function?.arguments
-                  ? JSON.parse(tool?.function?.arguments)
-                  : {},
-              ),
-            )
-              .then((res) => {
-                let content = res.data || res?.statusText;
-                // hotfix #5614
-                content =
-                  typeof content === "string"
-                    ? content
-                    : JSON.stringify(content);
-                if (res.status >= 300) {
-                  return Promise.reject(content);
-                }
-                return content;
-              })
-              .then((content) => {
-                options?.onAfterTool?.({
-                  ...tool,
-                  content,
-                  isError: false,
-                });
-                return content;
-              })
-              .catch((e) => {
-                options?.onAfterTool?.({
-                  ...tool,
-                  isError: true,
-                  errorMsg: e.toString(),
-                });
-                return e.toString();
-              })
-              .then((content) => ({
-                name: tool.function.name,
-                role: "tool",
-                content,
-                tool_call_id: tool.id,
-              }));
-          }),
-        ).then((toolCallResult) => {
-          processToolMessage(requestPayload, toolCallMessage, toolCallResult);
-          setTimeout(() => {
-            // call again
-            console.debug("[ChatAPI] restart");
-            running = false;
-            chatApi(chatPath, headers, requestPayload, tools); // call fetchEventSource
-          }, 60);
-        });
-        return;
-      }
-      if (running) {
-        return;
-      }
-      console.debug("[ChatAPI] end");
-      finished = true;
-      options.onFinish(responseText + remainText);
-    }
+  const finish = (content: string | undefined) => {
+    if (finished) return;
+    console.debug("[ChatAPI] end");
+    finished = true;
+    // 停止动画
+    controller.abort();
+    // 确保使用传入的 content 或已累积的 responseText
+    options.onFinish(content || responseText);
   };
 
+  // @ts-ignore
   controller.signal.onabort = finish;
 
   function chatApi(
@@ -303,13 +240,11 @@ export function stream(
       async onopen(res) {
         clearTimeout(requestTimeoutId);
         const contentType = res.headers.get("content-type");
-        console.log("[Request] response content type: ", contentType);
 
         if (contentType?.startsWith("text/plain")) {
           responseText = await res.clone().text();
-          return finish();
+          return finish(responseText);
         }
-        console.log("contentType is not text/plain");
         if (
           !res.ok ||
           !res.body ||
@@ -320,10 +255,7 @@ export function stream(
             ?.toLowerCase()
             .includes(EventStreamContentType)
         ) {
-          console.log("----------------------------------------------------");
           const responseTexts = [responseText];
-          console.log("[ChatAPI] response content type: ");
-          console.log(responseTexts);
           let extraInfo = await res.clone().text();
           try {
             const resJson = await res.clone().json();
@@ -338,29 +270,26 @@ export function stream(
             responseTexts.push(extraInfo);
           }
 
-          responseText = responseTexts.join("\n\n");
-
-          return finish();
+          // responseText = responseTexts.join("\n\n");
+          return;
         }
       },
       onmessage(msg) {
         console.log("-----------------msg----------------------");
-        console.log(msg);
-        if (msg.data === "[DONE]" || finished) {
-          return finish();
-        }
-        const text = msg.data;
         try {
-          const chunk = parseSSE(msg.data, runTools);
-          if (chunk) {
-            remainText += chunk;
+          const data = JSON.parse(msg.data);
+          const content = data.choices?.[0]?.delta?.content || "";
+          if (content) {
+            remainText += content;
+            responseText += content;
+            options.onUpdate?.(responseText, content);
           }
         } catch (e) {
-          console.error("[Request] parse error", text, msg, e);
+          console.error("[Request] parse error", msg.data, e);
         }
       },
       onclose() {
-        finish();
+        finish("");
       },
       onerror(e) {
         options?.onError?.(e);
