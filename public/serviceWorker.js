@@ -23,10 +23,11 @@ async function upload(request, url) {
   const formData = await request.formData()
   const file = formData.getAll('file')[0]
   let ext = file.name.split('.').pop()
+  let fileName = file.name.slice(0, file.name.lastIndexOf('.'))
   if (ext === 'blob') {
     ext = file.type.split('/').pop()
   }
-  const fileUrl = `${url.origin}/api/cache/${nanoid()}.${ext}`
+  const fileUrl = `${url.origin}/api/cache/${fileName}.${ext}`
   // console.debug('file', file, fileUrl, request)
   const cache = await caches.open(CHATGPT_NEXT_WEB_FILE_CACHE)
   await cache.put(new Request(fileUrl), new Response(file, {

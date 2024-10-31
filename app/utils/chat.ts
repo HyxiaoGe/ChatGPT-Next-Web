@@ -12,65 +12,7 @@ import {
 import { prettyObject } from "./format";
 import { fetch as tauriFetch } from "./stream";
 
-export function compressImage(file: Blob, maxSize: number): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (readerEvent: any) => {
-      const image = new Image();
-      image.onload = () => {
-        let canvas = document.createElement("canvas");
-        let ctx = canvas.getContext("2d");
-        let width = image.width;
-        let height = image.height;
-        let quality = 0.9;
-        let dataUrl;
-
-        do {
-          canvas.width = width;
-          canvas.height = height;
-          ctx?.clearRect(0, 0, canvas.width, canvas.height);
-          ctx?.drawImage(image, 0, 0, width, height);
-          dataUrl = canvas.toDataURL("image/jpeg", quality);
-
-          if (dataUrl.length < maxSize) break;
-
-          if (quality > 0.5) {
-            // Prioritize quality reduction
-            quality -= 0.1;
-          } else {
-            // Then reduce the size
-            width *= 0.9;
-            height *= 0.9;
-          }
-        } while (dataUrl.length > maxSize);
-
-        resolve(dataUrl);
-      };
-      image.onerror = reject;
-      image.src = readerEvent.target.result;
-    };
-    reader.onerror = reject;
-
-    if (file.type.includes("heic")) {
-      try {
-        const heic2any = require("heic2any");
-        heic2any({ blob: file, toType: "image/jpeg" })
-          .then((blob: Blob) => {
-            reader.readAsDataURL(blob);
-          })
-          .catch((e: any) => {
-            reject(e);
-          });
-      } catch (e) {
-        reject(e);
-      }
-    }
-
-    reader.readAsDataURL(file);
-  });
-}
-
-export async function preProcessImageContent(
+export async function preProcessFileContent(
   content: RequestMessage["content"],
 ) {
   if (typeof content === "string") {
@@ -78,12 +20,12 @@ export async function preProcessImageContent(
   }
   const result = [];
   for (const part of content) {
-    if (part?.type == "image_url" && part?.image_url?.url) {
+    if (part?.type == "file_url" && part?.file_url?.url) {
       try {
-        const url = await cacheImageToBase64Image(part?.image_url?.url);
-        result.push({ type: part.type, image_url: { url } });
+        const url = await cacheFileUrl(part?.file_url?.url);
+        result.push({ type: part.type, file_url: { url } });
       } catch (error) {
-        console.error("Error processing image URL:", error);
+        console.error("Error processing file URL:", error);
       }
     } else {
       result.push({ ...part });
@@ -92,45 +34,33 @@ export async function preProcessImageContent(
   return result;
 }
 
-const imageCaches: Record<string, string> = {};
+const fileUrlCaches: Record<string, string> = {};
 
-export function cacheImageToBase64Image(imageUrl: string) {
-  if (imageUrl.includes(CACHE_URL_PREFIX)) {
-    if (!imageCaches[imageUrl]) {
+export function cacheFileUrl(fileUrl: string) {
+  if (fileUrl.includes(CACHE_URL_PREFIX)) {
+    if (!fileUrlCaches[fileUrl]) {
       const reader = new FileReader();
-      return fetch(imageUrl, {
+      return fetch(fileUrl, {
         method: "GET",
         mode: "cors",
         credentials: "include",
       })
         .then((res) => res.blob())
-        .then(
-          async (blob) =>
-            (imageCaches[imageUrl] = await compressImage(blob, 256 * 1024)),
-        ); // compressImage
+        .then((blob) => {
+          // 直接缓存文件URL
+          fileUrlCaches[fileUrl] = URL.createObjectURL(blob);
+          return fileUrlCaches[fileUrl];
+        });
     }
-    return Promise.resolve(imageCaches[imageUrl]);
+    return Promise.resolve(fileUrlCaches[fileUrl]);
   }
-  return Promise.resolve(imageUrl);
+  return Promise.resolve(fileUrl);
 }
 
-export function base64Image2Blob(base64Data: string, contentType: string) {
-  const byteCharacters = atob(base64Data);
-  const byteNumbers = new Array(byteCharacters.length);
-  for (let i = 0; i < byteCharacters.length; i++) {
-    byteNumbers[i] = byteCharacters.charCodeAt(i);
-  }
-  const byteArray = new Uint8Array(byteNumbers);
-  return new Blob([byteArray], { type: contentType });
-}
-
-export function uploadImage(file: Blob): Promise<string> {
-  if (!window._SW_ENABLED) {
-    // if serviceWorker register error, using compressImage
-    return compressImage(file, 256 * 1024);
-  }
+export function uploadFile(file: File): Promise<string> {
   const body = new FormData();
   body.append("file", file);
+
   return fetch(UPLOAD_URL, {
     method: "post",
     body,
@@ -139,7 +69,7 @@ export function uploadImage(file: Blob): Promise<string> {
   })
     .then((res) => res.json())
     .then((res) => {
-      console.log("res", res);
+      console.log("Upload response", res);
       if (res?.code == 0 && res?.data) {
         return res?.data;
       }
@@ -147,8 +77,8 @@ export function uploadImage(file: Blob): Promise<string> {
     });
 }
 
-export function removeImage(imageUrl: string) {
-  return fetch(imageUrl, {
+export function removeFile(fileUrl: string) {
+  return fetch(fileUrl, {
     method: "DELETE",
     mode: "cors",
     credentials: "include",

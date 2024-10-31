@@ -1,12 +1,14 @@
 import { getClientConfig } from "../config/client";
 import {
   ACCESS_CODE_PREFIX,
+  CHATCHAT,
+  CHATCHAT_BASE_URL,
   ModelProvider,
   ServiceProvider,
 } from "../constant";
 import {
-  ChatMessageTool,
   ChatMessage,
+  ChatMessageTool,
   ModelType,
   useAccessStore,
   useChatStore,
@@ -22,6 +24,7 @@ import { MoonshotApi } from "./platforms/moonshot";
 import { SparkApi } from "./platforms/iflytek";
 import { XAIApi } from "./platforms/xai";
 import { CHATCHATApi } from "@/app/client/platforms/chatchat";
+import { fetch } from "@/app/utils/stream";
 
 export const ROLES = ["system", "user", "assistant"] as const;
 export type MessageRole = (typeof ROLES)[number];
@@ -31,9 +34,9 @@ export const TTSModels = ["tts-1", "tts-1-hd"] as const;
 export type ChatModel = ModelType;
 
 export interface MultimodalContent {
-  type: "text" | "image_url";
+  type: "text" | "file_url";
   text?: string;
-  image_url?: {
+  file_url?: {
     url: string;
   };
 }
@@ -77,6 +80,23 @@ export interface ChatOptions {
   onAfterTool?: (tool: ChatMessageTool) => void;
 }
 
+export interface UploadFileOptions {
+  files: (File | string)[];
+  knowledgeBaseName: string;
+  config: {
+    toVectorStore?: boolean;
+    override?: boolean;
+    notRefreshVsCache?: boolean;
+    chunkSize?: number;
+    chunkOverlap?: number;
+    zhTitleEnhance?: boolean;
+  };
+
+  onFinish: (response: any) => void;
+  onError?: (err: Error) => void;
+  onController?: (controller: AbortController) => void;
+}
+
 export interface LLMUsage {
   used: number;
   total: number;
@@ -99,8 +119,11 @@ export interface LLMModelProvider {
 
 export abstract class LLMApi {
   abstract chat(options: ChatOptions): Promise<void>;
+
   abstract speech(options: SpeechOptions): Promise<ArrayBuffer>;
+
   abstract usage(): Promise<LLMUsage>;
+
   abstract models(): Promise<LLMModel[]>;
 }
 
@@ -207,6 +230,89 @@ export class ClientApi {
     console.log("[Share]", resJson);
     if (resJson.id) {
       return `https://shareg.pt/${resJson.id}`;
+    }
+  }
+
+  async uploadFile(options: UploadFileOptions) {
+    const formData = new FormData();
+    const controller = new AbortController();
+
+    options.onController?.(controller);
+
+    console.log("[Request] Uploading documents", options.files);
+    try {
+      for (const file of options.files) {
+        if (typeof file === "string") {
+          const fileObj = await this.urlToFile(file);
+          formData.append("files", fileObj);
+        } else {
+          formData.append("files", file);
+        }
+      }
+
+      // Add other parameters
+      formData.append("knowledge_base_name", options.knowledgeBaseName);
+      formData.append(
+        "to_vector_store",
+        (options.config.toVectorStore ?? true).toString(),
+      );
+      formData.append(
+        "override",
+        (options.config.override ?? false).toString(),
+      );
+      formData.append(
+        "not_refresh_vs_cache",
+        (options.config.notRefreshVsCache ?? false).toString(),
+      );
+      formData.append(
+        "chunk_size",
+        (options.config.chunkSize ?? 750).toString(),
+      );
+      formData.append(
+        "chunk_overlap",
+        (options.config.chunkOverlap ?? 150).toString(),
+      );
+      formData.append(
+        "zh_title_enhance",
+        (options.config.zhTitleEnhance ?? false).toString(),
+      );
+      formData.append("docs", "");
+
+      const uploadPath = CHATCHAT_BASE_URL.concat(CHATCHAT.UploadFilePath);
+      console.log("[Request] Uploading documents to", uploadPath);
+      const response = await fetch(uploadPath, {
+        method: "POST",
+        body: formData,
+        signal: controller.signal,
+        headers: {
+          accept: "application/json",
+        },
+        mode: "cors",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error(`Upload failed with status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      options.onFinish(result);
+
+      return result;
+    } catch (e) {
+      console.error("[Request] Failed to upload documents", e);
+      options.onError?.(e as Error);
+      throw e;
+    }
+  }
+
+  private async urlToFile(url: string): Promise<File> {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const filename = url.split("/").pop() || "下载文件";
+      return new File([blob], filename, { type: blob.type });
+    } catch (e) {
+      throw new Error(`Failed to fetch file from URL: ${url}`);
     }
   }
 }

@@ -10,7 +10,7 @@ import {
 import { getClientConfig } from "@/app/config/client";
 import { ANTHROPIC_BASE_URL } from "@/app/constant";
 import { getMessageTextContent, isVisionModel } from "@/app/utils";
-import { preProcessImageContent, stream } from "@/app/utils/chat";
+import { preProcessFileContent, stream } from "@/app/utils/chat";
 import { cloudflareAIGatewayUrl } from "@/app/utils/cloudflare";
 import { RequestPayload } from "./openai";
 import { fetch } from "@/app/utils/stream";
@@ -101,7 +101,7 @@ export class ClaudeApi implements LLMApi {
     // try get base64image from local cache image_url
     const messages: ChatOptions["messages"] = [];
     for (const v of options.messages) {
-      const content = await preProcessImageContent(v.content);
+      const content = await preProcessFileContent(v.content);
       messages.push({ role: v.role, content });
     }
 
@@ -143,15 +143,15 @@ export class ClaudeApi implements LLMApi {
         return {
           role: insideRole,
           content: content
-            .filter((v) => v.image_url || v.text)
-            .map(({ type, text, image_url }) => {
+            .filter((v) => v.file_url || v.text)
+            .map(({ type, text, file_url }) => {
               if (type === "text") {
                 return {
                   type,
                   text: text!,
                 };
               }
-              const { url = "" } = image_url || {};
+              const { url = "" } = file_url || {};
               const colonIndex = url.indexOf(":");
               const semicolonIndex = url.indexOf(";");
               const comma = url.indexOf(",");

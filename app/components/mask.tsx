@@ -342,7 +342,7 @@ export function ContextPrompts(props: {
         const text = getMessageTextContent(context[i]);
         const newContext: MultimodalContent[] = [{ type: "text", text }];
         for (const img of images) {
-          newContext.push({ type: "image_url", image_url: { url: img } });
+          newContext.push({ type: "file_url", file_url: { url: img } });
         }
         context[i].content = newContext;
       }

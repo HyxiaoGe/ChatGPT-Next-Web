@@ -7,9 +7,9 @@ import {
 import { getBearerToken } from "@/app/client/api";
 import { createPersistStore } from "@/app/utils/store";
 import { nanoid } from "nanoid";
-import { uploadImage, base64Image2Blob } from "@/app/utils/chat";
 import { models, getModelParamBasicData } from "@/app/components/sd/sd-panel";
 import { useAccessStore } from "./access";
+import { uploadFile } from "@/app/utils/chat";
 
 const defaultModel = {
   name: models[0].name,
@@ -102,7 +102,7 @@ export const useSdStore = createPersistStore<
             }
             const self = this;
             if (resData.finish_reason === "SUCCESS") {
-              uploadImage(base64Image2Blob(resData.image, "image/png"))
+              uploadFile(new File([resData.img_data], "result.png"))
                 .then((img_data) => {
                   console.debug("uploadImage success", img_data, self);
                   self.updateDraw({

@@ -233,6 +233,8 @@ export const XAI = {
 export const CHATCHAT = {
   ExampleEndpoint: CHATCHAT_BASE_URL,
   ChatPath: "/chat/completions",
+  UploadFilePath: "/knowledge_base/upload_docs",
+  FileListPath: "/knowledge_base/list_files",
 };
 
 export const DEFAULT_INPUT_TEMPLATE = `{{input}}`; // input / time / model / lang

@@ -80,7 +80,7 @@ const cn = {
       Masks: "所有面具",
       Clear: "清除聊天",
       Settings: "对话设置",
-      UploadImage: "上传图片",
+      UploadFile: "上传文件",
     },
     Rename: "重命名对话",
     Typing: "正在输入…",
@@ -564,8 +564,8 @@ const cn = {
     },
   },
   Store: {
-    DefaultTopic: "新的聊天",
-    BotHello: "有什么可以帮你的吗",
+    DefaultTopic: "咨询窗口",
+    BotHello: "您好，请问我有什么可以帮您的吗",
     Error: "出错了，稍后重试吧",
     Prompt: {
       History: (content: string) => "这是历史聊天总结作为前情提要：" + content,

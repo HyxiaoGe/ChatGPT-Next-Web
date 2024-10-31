@@ -6,6 +6,23 @@ console.log("[Next] build mode", mode);
 const disableChunk = !!process.env.DISABLE_CHUNK || mode === "export";
 console.log("[Next] build with chunk: ", !disableChunk);
 
+const CorsHeaders = [
+  { key: "Access-Control-Allow-Credentials", value: "true" },
+  { key: "Access-Control-Allow-Origin", value: "*" },
+  {
+    key: "Access-Control-Allow-Methods",
+    value: "*",
+  },
+  {
+    key: "Access-Control-Allow-Headers",
+    value: "*",
+  },
+  {
+    key: "Access-Control-Max-Age",
+    value: "86400",
+  },
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   webpack(config) {
@@ -35,28 +52,21 @@ const nextConfig = {
   },
 };
 
-const CorsHeaders = [
-  { key: "Access-Control-Allow-Credentials", value: "true" },
-  { key: "Access-Control-Allow-Origin", value: "*" },
-  {
-    key: "Access-Control-Allow-Methods",
-    value: "*",
-  },
-  {
-    key: "Access-Control-Allow-Headers",
-    value: "*",
-  },
-  {
-    key: "Access-Control-Max-Age",
-    value: "86400",
-  },
-];
-
 if (mode !== "export") {
   nextConfig.headers = async () => {
     return [
       {
         source: "/api/:path*",
+        headers: CorsHeaders,
+      },
+      {
+        // 添加 chat 路径的 CORS 配置
+        source: "/chat/:path*",
+        headers: CorsHeaders,
+      },
+      {
+        // 添加 knowledge_base 路径的 CORS 配置
+        source: "/knowledge_base/:path*",
         headers: CorsHeaders,
       },
     ];
@@ -100,11 +110,25 @@ if (mode !== "export") {
         destination: 'http://192.168.250.122:7861/chat/:path*',
         basePath: false,
       },
+      {
+        source: '/knowledge_base/:path*',
+        destination: 'http://192.168.250.122:7861/knowledge_base/:path*',
+        basePath: false,
+      },
     ];
 
     return {
       beforeFiles: ret,
     };
+  };
+  nextConfig.middleware = async function middleware(req) {
+    if (req.method === 'OPTIONS') {
+      return new Response(null, {
+        status: 204,
+        headers: Object.fromEntries(CorsHeaders.map(h => [h.key, h.value])),
+      });
+    }
+    return null;
   };
 }
 

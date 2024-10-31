@@ -136,6 +136,7 @@ export function useWindowSize() {
 }
 
 export const MOBILE_MAX_WIDTH = 600;
+
 export function useMobileScreen() {
   const { width } = useWindowSize();
 
@@ -238,14 +239,14 @@ export function getMessageTextContent(message: RequestMessage) {
   return "";
 }
 
-export function getMessageImages(message: RequestMessage): string[] {
+export function getMessageFiles(message: RequestMessage): string[] {
   if (typeof message.content === "string") {
     return [];
   }
   const urls: string[] = [];
   for (const c of message.content) {
-    if (c.type === "image_url") {
-      urls.push(c.image_url?.url ?? "");
+    if (c.type === "file_url") {
+      urls.push(c.file_url?.url ?? "");
     }
   }
   return urls;

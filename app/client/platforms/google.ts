@@ -20,10 +20,10 @@ import { GEMINI_BASE_URL } from "@/app/constant";
 
 import {
   getMessageTextContent,
-  getMessageImages,
+  getMessageFiles,
   isVisionModel,
 } from "@/app/utils";
-import { preProcessImageContent } from "@/app/utils/chat";
+import { preProcessFileContent } from "@/app/utils/chat";
 import { nanoid } from "nanoid";
 import { RequestPayload } from "./openai";
 import { fetch } from "@/app/utils/stream";
@@ -75,13 +75,13 @@ export class GeminiProApi implements LLMApi {
     // try get base64image from local cache image_url
     const _messages: ChatOptions["messages"] = [];
     for (const v of options.messages) {
-      const content = await preProcessImageContent(v.content);
+      const content = await preProcessFileContent(v.content);
       _messages.push({ role: v.role, content });
     }
     const messages = _messages.map((v) => {
       let parts: any[] = [{ text: getMessageTextContent(v) }];
       if (isVisionModel(options.config.model)) {
-        const images = getMessageImages(v);
+        const images = getMessageFiles(v);
         if (images.length > 0) {
           multimodal = true;
           parts = parts.concat(

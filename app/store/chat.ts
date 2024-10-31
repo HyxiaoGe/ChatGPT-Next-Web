@@ -361,7 +361,7 @@ export const useChatStore = createPersistStore(
         get().summarizeSession();
       },
 
-      async onUserInput(content: string, attachImages?: string[]) {
+      async onUserInput(content: string, attachFiles?: string[]) {
         const session = get().currentSession();
         const modelConfig = session.mask.modelConfig;
 
@@ -370,16 +370,19 @@ export const useChatStore = createPersistStore(
 
         let mContent: string | MultimodalContent[] = userContent;
 
-        if (attachImages && attachImages.length > 0) {
-          mContent = [
-            ...(userContent
-              ? [{ type: "text" as const, text: userContent }]
-              : []),
-            ...attachImages.map((url) => ({
-              type: "image_url" as const,
-              image_url: { url },
-            })),
-          ];
+        const api: ClientApi = getClientApi(modelConfig.providerName);
+
+        if (attachFiles && attachFiles.length > 0) {
+          console.log("[User Input] attachFiles: ", attachFiles);
+          await api.uploadFile({
+            files: attachFiles,
+            knowledgeBaseName: "samples",
+            config: {
+              chunkSize: 750,
+            },
+            onFinish: (response) => console.log("Upload completed:", response),
+          });
+          return;
         }
 
         let userMessage: ChatMessage = createMessage({
@@ -410,7 +413,6 @@ export const useChatStore = createPersistStore(
           ]);
         });
 
-        const api: ClientApi = getClientApi(modelConfig.providerName);
         console.log("providerName: ", modelConfig.providerName);
         // make request
         api.llm.chat({
