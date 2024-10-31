@@ -1,7 +1,7 @@
 import {
   CACHE_URL_PREFIX,
-  UPLOAD_URL,
   REQUEST_TIMEOUT_MS,
+  UPLOAD_URL,
 } from "@/app/constant";
 import { RequestMessage } from "@/app/client/api";
 import Locale from "@/app/locales";
@@ -93,6 +93,7 @@ export async function preProcessImageContent(
 }
 
 const imageCaches: Record<string, string> = {};
+
 export function cacheImageToBase64Image(imageUrl: string) {
   if (imageUrl.includes(CACHE_URL_PREFIX)) {
     if (!imageCaches[imageUrl]) {
@@ -177,28 +178,17 @@ export function stream(
 
   // animate response to make it looks smooth
   function animateResponseText() {
-    console.log(
-      "---------------------------animateResponseText-------------------------------",
-    );
+    // 移除动画函数，因为我们不再需要它
+    // 每个 content 片段会直接显示
     if (finished || controller.signal.aborted) {
-      console.log("remainText", remainText);
-      responseText += remainText;
       console.log("[Response Animation] finished");
       if (responseText?.length === 0) {
         options.onError?.(new Error("empty response from server"));
       }
       return;
     }
-    if (remainText.length > 0) {
-      const fetchCount = Math.max(1, Math.round(remainText.length / 60));
-      const fetchText = remainText.slice(0, fetchCount);
-      responseText += fetchText;
-      remainText = remainText.slice(fetchCount);
-      options.onUpdate?.(responseText, fetchText);
-    }
-
-    requestAnimationFrame(animateResponseText);
   }
+
   // start animaion
   animateResponseText();
 
@@ -214,6 +204,8 @@ export function stream(
 
   // @ts-ignore
   controller.signal.onabort = finish;
+
+  let lastPromise = Promise.resolve();
 
   function chatApi(
     chatPath: string,
@@ -270,19 +262,24 @@ export function stream(
             responseTexts.push(extraInfo);
           }
 
-          // responseText = responseTexts.join("\n\n");
           return;
         }
       },
       onmessage(msg) {
-        console.log("-----------------msg----------------------");
         try {
           const data = JSON.parse(msg.data);
           const content = data.choices?.[0]?.delta?.content || "";
+
           if (content) {
-            remainText += content;
-            responseText += content;
-            options.onUpdate?.(responseText, content);
+            lastPromise = lastPromise.then(() => {
+              return new Promise((resolve) => {
+                setTimeout(() => {
+                  responseText += content;
+                  options.onUpdate?.(responseText, content);
+                  resolve();
+                }, 100);
+              });
+            });
           }
         } catch (e) {
           console.error("[Request] parse error", msg.data, e);
@@ -298,6 +295,7 @@ export function stream(
       openWhenHidden: true,
     });
   }
+
   console.debug("[ChatAPI] start");
   chatApi(chatPath, headers, requestPayload, tools); // call fetchEventSource
 }
