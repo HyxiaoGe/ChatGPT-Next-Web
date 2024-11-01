@@ -26,9 +26,11 @@ import ImageIcon from "../icons/image.svg";
 
 import BottomIcon from "../icons/bottom.svg";
 import StopIcon from "../icons/pause.svg";
+import RobotIcon from "../icons/robot.svg";
 import SizeIcon from "../icons/size.svg";
 import QualityIcon from "../icons/hd.svg";
 import StyleIcon from "../icons/palette.svg";
+import PluginIcon from "../icons/plugin.svg";
 
 import {
   BOT_HELLO,
@@ -54,6 +56,7 @@ import {
   safeLocalStorage,
   selectOrCopy,
   useMobileScreen,
+  showPlugins,
 } from "../utils";
 
 import { uploadFile as uploadFileRemote } from "@/app/utils/chat";
@@ -649,6 +652,46 @@ export function ChatActions(props: {
         />
       )}
 
+      <ChatAction
+        onClick={() => setShowModelSelector(true)}
+        text={currentModelName}
+        icon={<RobotIcon />}
+      />
+
+      {showModelSelector && (
+        <Selector
+          defaultSelectedValue={`${currentModel}@${currentProviderName}`}
+          items={models.map((m) => ({
+            title: `${m.displayName}${
+              m?.provider?.providerName
+                ? " (" + m?.provider?.providerName + ")"
+                : ""
+            }`,
+            value: `${m.name}@${m?.provider?.providerName}`,
+          }))}
+          onClose={() => setShowModelSelector(false)}
+          onSelection={(s) => {
+            if (s.length === 0) return;
+            const [model, providerName] = s[0].split("@");
+            chatStore.updateCurrentSession((session) => {
+              session.mask.modelConfig.model = model as ModelType;
+              session.mask.modelConfig.providerName =
+                providerName as ServiceProvider;
+              session.mask.syncGlobalConfig = false;
+            });
+            if (providerName == "ByteDance") {
+              const selectedModel = models.find(
+                (m) =>
+                  m.name == model && m?.provider?.providerName == providerName,
+              );
+              showToast(selectedModel?.displayName ?? "");
+            } else {
+              showToast(model);
+            }
+          }}
+        />
+      )}
+
       {isDalle3(currentModel) && (
         <ChatAction
           onClick={() => setShowStyleSelector(true)}
@@ -672,6 +715,36 @@ export function ChatActions(props: {
               session.mask.modelConfig.style = style;
             });
             showToast(style);
+          }}
+        />
+      )}
+
+      {showPlugins(currentProviderName, currentModel) && (
+        <ChatAction
+          onClick={() => {
+            if (pluginStore.getAll().length == 0) {
+              navigate(Path.Plugins);
+            } else {
+              setShowPluginSelector(true);
+            }
+          }}
+          text={Locale.Plugin.Name}
+          icon={<PluginIcon />}
+        />
+      )}
+      {showPluginSelector && (
+        <Selector
+          multiple
+          defaultSelectedValue={chatStore.currentSession().mask?.plugin}
+          items={pluginStore.getAll().map((item) => ({
+            title: `${item?.title}@${item?.version}`,
+            value: item?.id,
+          }))}
+          onClose={() => setShowPluginSelector(false)}
+          onSelection={(s) => {
+            chatStore.updateCurrentSession((session) => {
+              session.mask.plugin = s as string[];
+            });
           }}
         />
       )}

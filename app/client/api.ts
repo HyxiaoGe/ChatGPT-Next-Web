@@ -97,6 +97,39 @@ export interface UploadFileOptions {
   onController?: (controller: AbortController) => void;
 }
 
+export interface KBChatOptions {
+  messages: RequestMessage[];
+  config: KBChatConfig;
+  callbacks?: Callbacks;
+}
+
+export interface KBChatConfig {
+  mode: string;
+  kbName: string;
+  topK: number;
+  scoreThreshold: number;
+  model: string;
+  temperature: number;
+  maxTokens: number;
+  stream: boolean;
+  promptName: string;
+  returnDirect: boolean;
+}
+
+export interface RoleConfig {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface Callbacks {
+  onUpdate?: (message: string, chunk: string) => void;
+  onFinish: (message: string) => void;
+  onError?: (err: Error) => void;
+  onController?: (controller: AbortController) => void;
+  onBeforeTool?: (tool: ChatMessageTool) => void;
+  onAfterTool?: (tool: ChatMessageTool) => void;
+}
+
 export interface LLMUsage {
   used: number;
   total: number;
@@ -316,28 +349,7 @@ export class ClientApi {
     }
   }
 
-  async fetchKnowledgeBaseList(kb_name: string = "samples") {
-    let path = CHATCHAT_BASE_URL.concat(CHATCHAT.FileListPath);
-
-    path = path.concat("?knowledge_base_name=", kb_name);
-    console.log("[Request] fetch documents to", path);
-
-    const response = await fetch(path, {
-      method: "GET",
-      headers: {
-        accept: "application/json",
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`Upload failed with status: ${response.status}`);
-    }
-
-    const result = await response.json();
-
-    console.log("result: ", result);
-
-    return result;
-  }
+  async kbChat(options: ChatOptions) {}
 }
 
 export function getBearerToken(

@@ -23,8 +23,23 @@ import {
 } from "../api";
 import { getClientConfig } from "@/app/config/client";
 import { getMessageTextContent } from "@/app/utils";
-import { RequestPayload } from "./openai";
 import { fetch } from "@/app/utils/stream";
+
+export interface RequestPayload {
+  query: string;
+  mode: "local_kb";
+  kb_name: string;
+  top_k: number;
+  score_threshold: number;
+  history: {
+    role: "system" | "user" | "assistant";
+    content: string;
+  }[];
+  stream: boolean;
+  model: string;
+  temperature: number;
+  max_tokens: number;
+}
 
 export class CHATCHATApi implements LLMApi {
   private disableListModels = true;
@@ -62,10 +77,16 @@ export class CHATCHATApi implements LLMApi {
   }
 
   async chat(options: ChatOptions) {
-    const messages: ChatOptions["messages"] = [];
+    console.log("--------------------chat------------------------");
+    console.log("options", options);
+    const history: ChatOptions["messages"] = [];
+    console.log("options.messages", options.messages);
+    let queryText = "";
     for (const v of options.messages) {
+      console.log("v", v);
       const content = getMessageTextContent(v);
-      messages.push({ role: v.role, content });
+      queryText = content;
+      history.push({ role: v.role, content });
     }
 
     const modelConfig = {
@@ -78,13 +99,16 @@ export class CHATCHATApi implements LLMApi {
     };
 
     const requestPayload: RequestPayload = {
-      messages,
+      query: queryText,
+      mode: "local_kb",
+      kb_name: "samples",
+      top_k: modelConfig.top_k,
+      score_threshold: modelConfig.score_threshold,
+      history: [],
       stream: true,
       model: modelConfig.model,
       temperature: modelConfig.temperature,
-      presence_penalty: modelConfig.presence_penalty,
-      frequency_penalty: modelConfig.frequency_penalty,
-      top_p: modelConfig.top_p,
+      max_tokens: modelConfig.max_tokens,
     };
 
     // console.log("[Request] chatchat payload: ", requestPayload);
@@ -93,7 +117,9 @@ export class CHATCHATApi implements LLMApi {
     const controller = new AbortController();
     options.onController?.(controller);
     try {
-      const chatPath = this.path(CHATCHAT.ChatPath);
+      // const chatPath = this.path(CHATCHAT.ChatPath);
+      const kbChatPath = this.path(CHATCHAT.KBChatPath);
+      console.log("path: ", kbChatPath);
       const chatPayload = {
         method: "POST",
         body: JSON.stringify(requestPayload),
@@ -112,7 +138,7 @@ export class CHATCHATApi implements LLMApi {
             useChatStore.getState().currentSession().mask?.plugin || [],
           );
         return stream(
-          chatPath,
+          kbChatPath,
           requestPayload,
           getHeaders(),
           tools as any,
@@ -168,7 +194,7 @@ export class CHATCHATApi implements LLMApi {
           options,
         );
       } else {
-        const res = await fetch(chatPath, chatPayload);
+        const res = await fetch(kbChatPath, chatPayload);
         clearTimeout(requestTimeoutId);
 
         const resJson = await res.json();

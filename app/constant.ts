@@ -101,7 +101,7 @@ export const UNFINISHED_INPUT = (id: string) => "unfinished-input-" + id;
 
 export const STORAGE_KEY = "chatgpt-next-web";
 
-export const REQUEST_TIMEOUT_MS = 60000;
+export const REQUEST_TIMEOUT_MS = 300000;
 
 export const EXPORT_MESSAGE_CLASS_NAME = "export-markdown";
 
@@ -232,7 +232,8 @@ export const XAI = {
 
 export const CHATCHAT = {
   ExampleEndpoint: CHATCHAT_BASE_URL,
-  ChatPath: "/chat/completions",
+  // ChatPath: "/chat/completions",
+  KBChatPath: "/kb_chat",
   UploadFilePath: "/knowledge_base/upload_docs",
   FileListPath: "/knowledge_base/list_files",
 };

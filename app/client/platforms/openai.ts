@@ -62,6 +62,18 @@ export interface RequestPayload {
   max_tokens?: number;
 }
 
+export interface KBRequestPayload extends RequestPayload {
+  query: string;
+  mode: string;
+  kb_name: string;
+  top_k: number;
+  score_threshold: number;
+  history: string[];
+  model: string;
+  prompt_name: string;
+  return_direct: boolean;
+}
+
 export interface DalleRequestPayload {
   model: string;
   prompt: string;

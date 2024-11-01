@@ -11,6 +11,7 @@ import {
 } from "@fortaine/fetch-event-source";
 import { prettyObject } from "./format";
 import { fetch as tauriFetch } from "./stream";
+import { isEmpty } from "lodash-es";
 
 export async function preProcessFileContent(
   content: RequestMessage["content"],
@@ -197,19 +198,21 @@ export function stream(
       },
       onmessage(msg) {
         try {
-          const data = JSON.parse(msg.data);
-          const content = data.choices?.[0]?.delta?.content || "";
+          if (!isEmpty(msg.data)) {
+            const data = JSON.parse(msg.data);
+            const content = data.choices?.[0]?.delta?.content || "";
 
-          if (content) {
-            lastPromise = lastPromise.then(() => {
-              return new Promise((resolve) => {
-                setTimeout(() => {
-                  responseText += content;
-                  options.onUpdate?.(responseText, content);
-                  resolve();
-                }, 100);
+            if (content) {
+              lastPromise = lastPromise.then(() => {
+                return new Promise((resolve) => {
+                  setTimeout(() => {
+                    responseText += content;
+                    options.onUpdate?.(responseText, content);
+                    resolve();
+                  }, 100);
+                });
               });
-            });
+            }
           }
         } catch (e) {
           console.error("[Request] parse error", msg.data, e);

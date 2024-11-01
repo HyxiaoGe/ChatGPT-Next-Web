@@ -111,6 +111,11 @@ if (mode !== "export") {
         basePath: false,
       },
       {
+        source: '/kb_chat/:path*',
+        destination: 'http://192.168.250.122:7861/kb_chat/:path*',
+        basePath: false,
+      },
+      {
         source: '/knowledge_base/:path*',
         destination: 'http://192.168.250.122:7861/knowledge_base/:path*',
         basePath: false,
