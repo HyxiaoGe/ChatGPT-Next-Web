@@ -15,7 +15,7 @@ import { IconButton } from "./button";
 import {
   copyToClipboard,
   downloadAs,
-  getMessageImages,
+  getMessageFiles,
   useMobileScreen,
 } from "../utils";
 
@@ -586,24 +586,24 @@ export function ImagePreviewer(props: {
                   fontFamily={config.fontFamily}
                   defaultShow
                 />
-                {getMessageImages(m).length == 1 && (
+                {getMessageFiles(m).length == 1 && (
                   <img
                     key={i}
-                    src={getMessageImages(m)[0]}
+                    src={getMessageFiles(m)[0]}
                     alt="message"
                     className={styles["message-image"]}
                   />
                 )}
-                {getMessageImages(m).length > 1 && (
+                {getMessageFiles(m).length > 1 && (
                   <div
                     className={styles["message-images"]}
                     style={
                       {
-                        "--image-count": getMessageImages(m).length,
+                        "--image-count": getMessageFiles(m).length,
                       } as React.CSSProperties
                     }
                   >
-                    {getMessageImages(m).map((src, i) => (
+                    {getMessageFiles(m).map((src, i) => (
                       <img
                         key={i}
                         src={src}

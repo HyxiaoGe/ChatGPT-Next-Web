@@ -41,7 +41,7 @@ import { useState } from "react";
 import {
   copyToClipboard,
   downloadAs,
-  getMessageImages,
+  getMessageFiles,
   readFromFile,
 } from "../utils";
 import { Updater } from "../typing";
@@ -336,7 +336,7 @@ export function ContextPrompts(props: {
 
   const updateContextPrompt = (i: number, prompt: ChatMessage) => {
     props.updateContext((context) => {
-      const images = getMessageImages(context[i]);
+      const images = getMessageFiles(context[i]);
       context[i] = prompt;
       if (images.length > 0) {
         const text = getMessageTextContent(context[i]);

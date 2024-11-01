@@ -315,6 +315,29 @@ export class ClientApi {
       throw new Error(`Failed to fetch file from URL: ${url}`);
     }
   }
+
+  async fetchKnowledgeBaseList(kb_name: string = "samples") {
+    let path = CHATCHAT_BASE_URL.concat(CHATCHAT.FileListPath);
+
+    path = path.concat("?knowledge_base_name=", kb_name);
+    console.log("[Request] fetch documents to", path);
+
+    const response = await fetch(path, {
+      method: "GET",
+      headers: {
+        accept: "application/json",
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`Upload failed with status: ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    console.log("result: ", result);
+
+    return result;
+  }
 }
 
 export function getBearerToken(

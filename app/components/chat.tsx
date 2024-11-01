@@ -60,6 +60,8 @@ import { uploadFile as uploadFileRemote } from "@/app/utils/chat";
 
 import dynamic from "next/dynamic";
 
+import { KnowledgeBaseCache } from "@/app/store/knowledgebase";
+
 import { ChatControllerPool } from "../client/controller";
 import { DalleQuality, DalleSize, DalleStyle } from "../typing";
 import { Prompt, usePromptStore } from "../store/prompt";
@@ -897,7 +899,9 @@ function _Chat() {
     if (n === 0) {
       setPromptHints([]);
     } else if (text.match(ChatCommandPrefix)) {
-      setPromptHints(chatCommands.search(text));
+      const commands = KnowledgeBaseCache.searchCommands(text);
+      console.log("commands: ", commands);
+      setPromptHints(commands);
     } else if (!config.disablePromptHint && n < SEARCH_TEXT_LIMIT) {
       // check if need to trigger auto completion
       if (text.startsWith("/")) {
@@ -1404,6 +1408,7 @@ function _Chat() {
   const [showShortcutKeyModal, setShowShortcutKeyModal] = useState(false);
 
   useEffect(() => {
+    KnowledgeBaseCache.getFileList();
     const handleKeyDown = (event: any) => {
       // 打开新聊天 command + shift + o
       if (
