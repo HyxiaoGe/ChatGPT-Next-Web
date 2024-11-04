@@ -357,35 +357,44 @@ export class QwenApi implements LLMApi {
     const message = this.extractMessage(resJson);
     options.onFinish(message);
   }
-
   async uploadFile(fileUrls: string[]) {
-    const formData = new FormData();
-
     console.log("[Request] Uploading documents", fileUrls);
     try {
       const filePromises = fileUrls.map((url) => this.urlToFile(url));
       const files = await Promise.all(filePromises);
 
-      formData.append("purpose", "file-extract");
-      files.forEach((file) => {
-        formData.append("files", file);
-      });
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append("purpose", "file-extract");
+        formData.append("file", file);
 
-      const res = await fetch(this.path(Alibaba.UploadPath), {
-        method: "POST",
-        body: formData,
-        headers: {
-            ...getHeaders(),
-          "Authorization": "Bearer " + useAccessStore.getState().alibabaApiKey,
+        // Debug information
+        console.log("Uploading file:", {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+        });
+
+        const res = await window.fetch(this.path(Alibaba.UploadPath), {
+          method: "POST",
+          body: formData,
+          headers: {
+            Authorization: "Bearer " + useAccessStore.getState().alibabaApiKey,
+            Accept: "application/json",
+          },
+          mode: "cors",
+          credentials: "include",
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          console.error("[Request] Upload failed:", errorData);
+          throw new Error(errorData.message || "Upload failed");
         }
-      });
 
-      const resJson = await res.json();
-
-      console.log("[Request] Uploaded documents", resJson);
-
-      debugger
-
+        const resJson = await res.json();
+        console.log("[Request] Uploaded document", resJson);
+      }
     } catch (e) {
       console.error("[Request] Failed to upload documents", e);
       throw e;
@@ -394,10 +403,18 @@ export class QwenApi implements LLMApi {
 
   private async urlToFile(url: string): Promise<File> {
     try {
-      const response = await fetch(url);
+      const response = await window.fetch(url);
       const blob = await response.blob();
-      const filename = url.split("/").pop() || "下载文件";
-      return new File([blob], filename, { type: blob.type });
+      const filename = url.split("/").pop() || "document";
+
+      // Set correct content type for markdown files
+      const contentType = filename.endsWith(".md")
+        ? "text/markdown"
+        : blob.type;
+
+      return new File([blob], filename, {
+        type: contentType,
+      });
     } catch (e) {
       throw new Error(`Failed to fetch file from URL: ${url}`);
     }
