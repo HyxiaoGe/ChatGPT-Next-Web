@@ -22,7 +22,7 @@ import {
 } from "@fortaine/fetch-event-source";
 import { prettyObject } from "@/app/utils/format";
 import { getClientConfig } from "@/app/config/client";
-import { getMessageTextContent } from "@/app/utils";
+import { getMessageImages, getMessageTextContent } from "@/app/utils";
 import { fetch } from "@/app/utils/stream";
 
 export interface OpenAIListModelResponse {
@@ -96,6 +96,25 @@ export class QwenApi implements LLMApi {
       role: v.role,
       content: getMessageTextContent(v),
     }));
+
+    const files = options.messages.map((v) => ({
+      fileUrl: getMessageImages(v),
+    }));
+
+    if (files.length > 0) {
+      const fileUrls = files.reduce((acc: string[], curr) => {
+        if (curr && Array.isArray(curr.fileUrl)) {
+          curr.fileUrl.forEach((item) => {
+            if (item) acc.push(item);
+          });
+        }
+        return acc;
+      }, []);
+
+      if (fileUrls.length > 0) {
+        this.uploadFile(fileUrls);
+      }
+    }
 
     const modelConfig = {
       ...useAppConfig.getState().modelConfig,
@@ -337,6 +356,51 @@ export class QwenApi implements LLMApi {
     const resJson = await res.json();
     const message = this.extractMessage(resJson);
     options.onFinish(message);
+  }
+
+  async uploadFile(fileUrls: string[]) {
+    const formData = new FormData();
+
+    console.log("[Request] Uploading documents", fileUrls);
+    try {
+      const filePromises = fileUrls.map((url) => this.urlToFile(url));
+      const files = await Promise.all(filePromises);
+
+      formData.append("purpose", "file-extract");
+      files.forEach((file) => {
+        formData.append("files", file);
+      });
+
+      const res = await fetch(this.path(Alibaba.UploadPath), {
+        method: "POST",
+        body: formData,
+        headers: {
+            ...getHeaders(),
+          "Authorization": "Bearer " + useAccessStore.getState().alibabaApiKey,
+        }
+      });
+
+      const resJson = await res.json();
+
+      console.log("[Request] Uploaded documents", resJson);
+
+      debugger
+
+    } catch (e) {
+      console.error("[Request] Failed to upload documents", e);
+      throw e;
+    }
+  }
+
+  private async urlToFile(url: string): Promise<File> {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const filename = url.split("/").pop() || "下载文件";
+      return new File([blob], filename, { type: blob.type });
+    } catch (e) {
+      throw new Error(`Failed to fetch file from URL: ${url}`);
+    }
   }
 
   async usage() {

@@ -383,6 +383,9 @@ export const useChatStore = createPersistStore(
               file_url: { url },
             })),
           ];
+
+
+
         }
 
         let userMessage: ChatMessage = createMessage({

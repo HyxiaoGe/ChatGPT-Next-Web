@@ -20,6 +20,7 @@ import { getClientConfig } from "@/app/config/client";
 import { getMessageTextContent } from "@/app/utils";
 import { RequestPayload } from "./openai";
 import { fetch } from "@/app/utils/stream";
+import {array} from "prop-types";
 
 export class XAIApi implements LLMApi {
   private disableListModels = true;
@@ -107,17 +108,17 @@ export class XAIApi implements LLMApi {
       );
 
       if (shouldStream) {
-        const [tools, funcs] = usePluginStore
-          .getState()
-          .getAsTools(
-            useChatStore.getState().currentSession().mask?.plugin || [],
-          );
+        // const [tools, funcs] = usePluginStore
+        //   .getState()
+        //   .getAsTools(
+        //     useChatStore.getState().currentSession().mask?.plugin || [],
+        //   );
         return stream(
           chatPath,
           requestPayload,
           getHeaders(),
-          tools as any,
-          funcs,
+          array as any,
+          array as any,
           controller,
           // parseSSE
           (text: string, runTools: ChatMessageTool[]) => {

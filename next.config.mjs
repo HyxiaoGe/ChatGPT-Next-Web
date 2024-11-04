@@ -98,6 +98,10 @@ if (mode !== "export") {
         source: "/api/proxy/alibaba/:path*",
         destination: "https://dashscope.aliyuncs.com/api/:path*",
       },
+      {
+        source: "/v1/files/:path*",
+        destination: "https://dashscope.aliyuncs.com/compatible-mode/v1/files/:path*",
+      },
     ];
     
     return {
