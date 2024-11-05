@@ -136,6 +136,7 @@ export function useWindowSize() {
 }
 
 export const MOBILE_MAX_WIDTH = 600;
+
 export function useMobileScreen() {
   const { width } = useWindowSize();
 
@@ -226,13 +227,15 @@ export function isMacOS(): boolean {
   return false;
 }
 
-export function getMessageTextContent(message: RequestMessage) {
+export function getMessageTextContent(message: RequestMessage): string {
   if (typeof message.content === "string") {
     return message.content;
   }
-  for (const c of message.content) {
-    if (c.type === "text") {
-      return c.text ?? "";
+  if (Array.isArray(message.content)) {
+    for (const c of message.content) {
+      if (c.type === "text") {
+        return c.text ?? "";
+      }
     }
   }
   return "";
@@ -252,7 +255,6 @@ export function getMessageImages(message: RequestMessage): string[] {
 }
 
 export function isVisionModel(model: string) {
-
   const visionKeywords = [
     "vision",
     "claude-3",

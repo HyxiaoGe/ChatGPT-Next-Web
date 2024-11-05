@@ -99,8 +99,12 @@ if (mode !== "export") {
         destination: "https://dashscope.aliyuncs.com/api/:path*",
       },
       {
-        source: "/v1/files/:path*",
-        destination: "https://dashscope.aliyuncs.com/compatible-mode/v1/files/:path*",
+        source: "/api/alibaba/v1/chat/completions",
+        destination: "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+      },
+      {
+        source: "/api/alibaba/v1/:path",
+        destination: "https://dashscope.aliyuncs.com/compatible-mode/v1/:path",
       },
     ];
     

@@ -208,8 +208,9 @@ export const ByteDance = {
 
 export const Alibaba = {
   ExampleEndpoint: ALIBABA_BASE_URL,
-  ChatPath: "v1/services/aigc/text-generation/generation",
-  UploadPath: "v1/files",
+  GenerationPath: "v1/services/aigc/text-generation/generation",
+  UploadPath: "/api/alibaba/v1/files",
+  ChatPath: "v1/chat/completions",
   KBPath: "v1/apps/bea87610718143c18ad4e3613575e873/completion",
 };
 

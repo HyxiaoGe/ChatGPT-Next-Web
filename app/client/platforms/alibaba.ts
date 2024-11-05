@@ -13,6 +13,7 @@ import {
   LLMApi,
   LLMModel,
   MultimodalContent,
+  RequestMessage,
   SpeechOptions,
 } from "../api";
 import Locale from "../../locales";
@@ -32,28 +33,6 @@ export interface OpenAIListModelResponse {
     object: string;
     root: string;
   }>;
-}
-
-interface RequestInput {
-  messages: {
-    role: "system" | "user" | "assistant";
-    content: string | MultimodalContent[];
-  }[];
-}
-
-interface RequestParam {
-  result_format: string;
-  incremental_output?: boolean;
-  temperature: number;
-  repetition_penalty?: number;
-  top_p: number;
-  max_tokens?: number;
-}
-
-interface RequestPayload {
-  model: string;
-  input: RequestInput;
-  parameters: RequestParam;
 }
 
 export class QwenApi implements LLMApi {
@@ -92,10 +71,24 @@ export class QwenApi implements LLMApi {
   }
 
   async chat(options: ChatOptions) {
-    const messages = options.messages.map((v) => ({
+    let isContainsImage = false;
+    let requestPayload: any;
+
+    const messages: RequestMessage[] = options.messages.map((v): RequestMessage => ({
       role: v.role,
-      content: getMessageTextContent(v),
+      content: Array.isArray(v.content)
+          ? v.content.find(item => item.type === "text")?.text || ""
+          : getMessageTextContent(v),
     }));
+
+    let modelConfig = {
+      ...useAppConfig.getState().modelConfig,
+      ...useChatStore.getState().currentSession().mask.modelConfig,
+      ...{
+        plugin: useChatStore.getState().currentSession().mask.plugin,
+        model: options.config.model,
+      },
+    };
 
     const files = options.messages.map((v) => ({
       fileUrl: getMessageImages(v),
@@ -112,24 +105,46 @@ export class QwenApi implements LLMApi {
       }, []);
 
       if (fileUrls.length > 0) {
-        this.uploadFile(fileUrls);
+        const rspJson = await this.uploadFile(fileUrls);
+        if (typeof rspJson === "object" && rspJson !== null) {
+          if (Array.isArray(rspJson)) {
+            const lastUserMessageIndex = messages.map((m) => m.role).lastIndexOf("user");
+            if (lastUserMessageIndex !== -1) {
+              const base64 = rspJson[0]?.base64;
+              isContainsImage = true;
+              const originalTextContent = messages[lastUserMessageIndex].content as string;
+
+              const imageContent: MultimodalContent = {
+                type: "image_url",
+                image_url: {
+                  url: base64,
+                },
+              };
+              const textContent: MultimodalContent = {
+                type: "text",
+                text: originalTextContent,
+              };
+
+              messages[lastUserMessageIndex] = {
+                role: "user",
+                content: [imageContent, textContent],
+              } as RequestMessage;
+            }
+          } else {
+            modelConfig.model = "qwen-long";
+            messages.unshift({
+              role: "system",
+              content: "fileid://" + rspJson?.id,
+            });
+          }
+        }
       }
     }
-
-    const modelConfig = {
-      ...useAppConfig.getState().modelConfig,
-      ...useChatStore.getState().currentSession().mask.modelConfig,
-      ...{
-        plugin: useChatStore.getState().currentSession().mask.plugin,
-        model: options.config.model,
-      },
-    };
 
     const shouldStream = !!options.config.stream;
     const controller = new AbortController();
     options.onController?.(controller);
 
-    let requestPayload: any;
     let chatPath: string;
 
     if (modelConfig.plugin && modelConfig.plugin[0] === "knowledge-chat") {
@@ -143,19 +158,28 @@ export class QwenApi implements LLMApi {
       };
       chatPath = this.path(Alibaba.KBPath);
     } else {
-      requestPayload = {
-        model: modelConfig.model,
-        input: {
-          messages,
-        },
-        parameters: {
-          result_format: "message",
-          incremental_output: shouldStream,
-          temperature: modelConfig.temperature,
-          top_p: modelConfig.top_p === 1 ? 0.99 : modelConfig.top_p,
-        },
-      };
-      chatPath = this.path(Alibaba.ChatPath);
+      if (isContainsImage) {
+        requestPayload = {
+          model: "qwen-vl-max-latest",
+          messages: messages,
+          stream: true,
+        };
+        chatPath = this.path(Alibaba.ChatPath)
+      } else {
+        requestPayload = {
+          model: modelConfig.model,
+          input: {
+            messages,
+          },
+          parameters: {
+            result_format: "message",
+            incremental_output: shouldStream,
+            temperature: modelConfig.temperature,
+            top_p: modelConfig.top_p === 1 ? 0.99 : modelConfig.top_p,
+          },
+        };
+        chatPath = this.path(Alibaba.GenerationPath);
+      }
     }
 
     try {
@@ -238,7 +262,6 @@ export class QwenApi implements LLMApi {
     const animateResponseText = () => {
       if (finished || controller.signal.aborted) {
         responseText += remainText;
-        console.log("[Response Animation] finished");
         if (responseText?.length === 0) {
           options.onError?.(new Error("empty response from server"));
         }
@@ -273,8 +296,6 @@ export class QwenApi implements LLMApi {
       async onopen(res) {
         clearTimeout(requestTimeoutId);
         const contentType = res.headers.get("content-type");
-        console.log("[Alibaba] request response content type: ", contentType);
-
         if (contentType?.startsWith("text/plain")) {
           responseText = await res.clone().text();
           return finish();
@@ -323,6 +344,11 @@ export class QwenApi implements LLMApi {
             if (delta) {
               remainText += delta;
             }
+          } else if (json.choices[0]) {
+            console.log("[Request] delta content", json.choices[0].delta.content);
+            if (json.choices[0].delta.content) {
+              remainText += json.choices[0].delta.content;
+            }
           }
         } catch (e) {
           console.error("[Request] parse error", msg);
@@ -357,48 +383,96 @@ export class QwenApi implements LLMApi {
     const message = this.extractMessage(resJson);
     options.onFinish(message);
   }
+
   async uploadFile(fileUrls: string[]) {
-    console.log("[Request] Uploading documents", fileUrls);
     try {
-      const filePromises = fileUrls.map((url) => this.urlToFile(url));
+      const imageExtensions = [
+        "jpg",
+        "jpeg",
+        "png",
+        "gif",
+        "webp",
+        "bmp",
+        "svg",
+        "ico",
+        "tiff",
+        "tif",
+        "avif",
+      ];
+
+      const categorizedUrls = fileUrls.reduce(
+        (acc, url) => {
+          const extension = url.split(".").pop()?.toLowerCase() || "";
+          if (imageExtensions.includes(extension)) {
+            acc.imageUrls.push(url);
+          } else {
+            acc.fileUrls.push(url);
+          }
+          return acc;
+        },
+        { imageUrls: [] as string[], fileUrls: [] as string[] },
+      );
+
+      const filePromises = categorizedUrls.fileUrls.map((url) =>
+        this.urlToFile(url),
+      );
       const files = await Promise.all(filePromises);
 
-      for (const file of files) {
-        const formData = new FormData();
-        formData.append("purpose", "file-extract");
-        formData.append("file", file);
-
-        // Debug information
-        console.log("Uploading file:", {
-          name: file.name,
-          type: file.type,
-          size: file.size,
-        });
-
-        const res = await window.fetch(this.path(Alibaba.UploadPath), {
-          method: "POST",
-          body: formData,
-          headers: {
-            Authorization: "Bearer " + useAccessStore.getState().alibabaApiKey,
-            Accept: "application/json",
-          },
-          mode: "cors",
-          credentials: "include",
-        });
-
-        if (!res.ok) {
-          const errorData = await res.json();
-          console.error("[Request] Upload failed:", errorData);
-          throw new Error(errorData.message || "Upload failed");
+      for (let file of files) {
+        const result = await this.uploadNonPictureFile(file);
+        if (result?.status === "processed") {
+          return result;
         }
-
-        const resJson = await res.json();
-        console.log("[Request] Uploaded document", resJson);
       }
-    } catch (e) {
-      console.error("[Request] Failed to upload documents", e);
-      throw e;
+
+      const imagePromises = categorizedUrls.imageUrls.map(async (url) => {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        return new Promise<{ file: File; base64: string }>(
+          (resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              const base64 = reader.result as string;
+              const filename = url.split("/").pop() || "image";
+              const file = new File([blob], filename, { type: blob.type });
+              resolve({ file, base64 });
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          },
+        );
+      });
+      return await Promise.all(imagePromises);
+    } catch (error) {
+      console.error("[Upload Failed]", error);
+      throw error;
     }
+  }
+
+  private async uploadNonPictureFile(file: File) {
+    const formData = new FormData();
+    formData.append("purpose", "file-extract");
+    formData.append("file", file);
+
+    const res = await fetch(Alibaba.UploadPath, {
+      method: "POST",
+      body: formData,
+      headers: {
+        Authorization: `Bearer ${useAccessStore.getState().alibabaApiKey}`,
+      },
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("[Upload Error]", {
+        status: res.status,
+        statusText: res.statusText,
+        error: errorText,
+      });
+      throw new Error(errorText);
+    }
+
+    return await res.json();
   }
 
   private async urlToFile(url: string): Promise<File> {
@@ -407,15 +481,35 @@ export class QwenApi implements LLMApi {
       const blob = await response.blob();
       const filename = url.split("/").pop() || "document";
 
-      // Set correct content type for markdown files
-      const contentType = filename.endsWith(".md")
-        ? "text/markdown"
-        : blob.type;
+      // 扩展文件类型映射
+      const mimeTypes: Record<string, string> = {
+        ".md": "text/markdown",
+        ".txt": "text/plain",
+        ".json": "application/json",
+        ".pdf": "application/pdf",
+        ".doc": "application/msword",
+        ".docx":
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ".xls": "application/vnd.ms-excel",
+        ".xlsx":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ".csv": "text/csv",
+      };
 
-      return new File([blob], filename, {
-        type: contentType,
-      });
+      // 获取文件扩展名
+      const ext = "." + filename.split(".").pop()?.toLowerCase();
+      const contentType =
+        mimeTypes[ext] || blob.type || "application/octet-stream";
+
+      if (contentType === "application/octet-stream") {
+        console.warn(
+          `Warning: Using generic content type for file ${filename}`,
+        );
+      }
+
+      return new File([blob], filename, { type: contentType });
     } catch (e) {
+      console.error(`Failed to fetch file from URL: ${url}`, e);
       throw new Error(`Failed to fetch file from URL: ${url}`);
     }
   }
