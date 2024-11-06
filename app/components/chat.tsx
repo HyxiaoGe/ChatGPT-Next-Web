@@ -28,10 +28,10 @@ import ResetIcon from "../icons/reload.svg";
 import ReloadIcon from "../icons/reload.svg";
 import SettingsIcon from "../icons/chat-settings.svg";
 import DeleteIcon from "../icons/clear.svg";
+import ClearIcon from "../icons/clear.svg";
 import PinIcon from "../icons/pin.svg";
 import ConfirmIcon from "../icons/confirm.svg";
 import CloseIcon from "../icons/close.svg";
-import ClearIcon from "../icons/clear.svg";
 import CancelIcon from "../icons/cancel.svg";
 import ImageIcon from "../icons/image.svg";
 
@@ -585,8 +585,8 @@ export function ChatActions(props: {
         text={(() => {
           const currentPluginId = chatStore.currentSession().mask?.plugin?.[0];
           return currentPluginId && plugins[currentPluginId]
-              ? plugins[currentPluginId].title
-              : Locale.Plugin.Name;
+            ? plugins[currentPluginId].title
+            : Locale.Plugin.Name;
         })()}
         icon={<PluginIcon />}
       />
@@ -606,11 +606,11 @@ export function ChatActions(props: {
         />
       )}
 
-        <ChatAction
-          onClick={props.uploadFile}
-          text={Locale.Chat.InputActions.UploadFile}
-          icon={props.uploading ? <LoadingButtonIcon /> : <ImageIcon />}
-        />
+      <ChatAction
+        onClick={props.uploadFile}
+        text={Locale.Chat.InputActions.UploadFile}
+        icon={props.uploading ? <LoadingButtonIcon /> : <ImageIcon />}
+      />
       <ChatAction
         onClick={nextTheme}
         text={Locale.Chat.InputActions.Theme[theme]}
@@ -1464,35 +1464,35 @@ function _Chat() {
     files.push(...attachFiles);
 
     files.push(
-        ...(await new Promise<string[]>((res, rej) => {
-          const fileInput = document.createElement("input");
-          fileInput.type = "file";
-          fileInput.multiple = true;
-          fileInput.onchange = (event: any) => {
-            setUploading(true);
-            const files = event.target.files;
-            const filesData: string[] = [];
-            for (let i = 0; i < files.length; i++) {
-              const file = event.target.files[i];
-              uploadFileRemote(file)
-                  .then((dataUrl) => {
-                    filesData.push(dataUrl);
-                    if (
-                        filesData.length === 3 ||
-                        filesData.length === files.length
-                    ) {
-                      setUploading(false);
-                      res(filesData);
-                    }
-                  })
-                  .catch((e) => {
-                    setUploading(false);
-                    rej(e);
-                  });
-            }
-          };
-          fileInput.click();
-        })),
+      ...(await new Promise<string[]>((res, rej) => {
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.multiple = true;
+        fileInput.onchange = (event: any) => {
+          setUploading(true);
+          const files = event.target.files;
+          const filesData: string[] = [];
+          for (let i = 0; i < files.length; i++) {
+            const file = event.target.files[i];
+            uploadFileRemote(file)
+              .then((dataUrl) => {
+                filesData.push(dataUrl);
+                if (
+                  filesData.length === 3 ||
+                  filesData.length === files.length
+                ) {
+                  setUploading(false);
+                  res(filesData);
+                }
+              })
+              .catch((e) => {
+                setUploading(false);
+                rej(e);
+              });
+          }
+        };
+        fileInput.click();
+      })),
     );
 
     const filesLength = files.length;
@@ -1945,12 +1945,23 @@ function _Chat() {
           {attachFiles.length != 0 && (
             <div className={styles["attach-images"]}>
               {attachFiles.map((file, index) => {
+                const isImage = /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(file);
                 return (
                   <div
                     key={index}
-                    className={styles["attach-image"]}
-                    style={{ backgroundImage: `url("${file}")` }}
+                    className={`${styles["attach-image"]} ${
+                      !isImage ? styles["attach-file"] : ""
+                    }`}
+                    style={isImage ? { backgroundImage: `url("${file}")` } : {}}
                   >
+                    {!isImage && (
+                      <div className={styles["file-info"]}>
+                        <i className="fas fa-file" />
+                        <span className={styles["file-name"]}>
+                          {file.split("/").pop()} {}
+                        </span>
+                      </div>
+                    )}
                     <div className={styles["attach-image-mask"]}>
                       <DeleteImageButton
                         deleteImage={() => {

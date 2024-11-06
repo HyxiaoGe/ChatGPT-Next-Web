@@ -1,0 +1,40 @@
+{
+  "supportedFileTypes": {
+    "images": [
+      "image/bmp",
+      "image/jpeg",
+      "image/jp2",
+      "image/png",
+      "image/webp",
+      "image/tiff",
+      "image/x-icon",
+      "image/icns",
+      "image/sgi"
+    ],
+    "documents": [
+      "text/plain",
+      "text/markdown",
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ],
+    "ebooks": [
+      "application/epub+zip",
+      "application/x-mobipocket-ebook"
+    ],
+    "office": [
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-powerpoint",
+      "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    ],
+    "others": [
+      "application/rtf",
+      "text/csv",
+      "text/html",
+      "application/json",
+      "application/xml",
+      "text/xml"
+    ]
+  }
+}

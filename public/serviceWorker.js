@@ -26,7 +26,9 @@ async function upload(request, url) {
   if (ext === 'blob') {
     ext = file.type.split('/').pop()
   }
-  const fileUrl = `${url.origin}/api/cache/${nanoid()}.${ext}`
+
+  // const fileUrl = `${url.origin}/api/cache/${nanoid()}.${ext}`
+  const fileUrl = `${url.origin}/api/cache/${file.name}`
   // console.debug('file', file, fileUrl, request)
   const cache = await caches.open(CHATGPT_NEXT_WEB_FILE_CACHE)
   await cache.put(new Request(fileUrl), new Response(file, {

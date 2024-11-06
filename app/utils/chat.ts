@@ -11,6 +11,7 @@ import {
 } from "@fortaine/fetch-event-source";
 import { prettyObject } from "./format";
 import { fetch as tauriFetch } from "./stream";
+import fileTypesConfig from "../../public/fileTypes.json";
 
 export function compressImage(file: Blob, maxSize: number): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -124,6 +125,13 @@ export function base64Image2Blob(base64Data: string, contentType: string) {
 }
 
 export function uploadFile(file: File): Promise<string> {
+
+  const supportedFileTypes = Object.values(fileTypesConfig.supportedFileTypes).flat();
+
+  if (!supportedFileTypes.includes(file.type)) {
+    throw Error('不支持的文件格式');
+  }
+
   const body = new FormData();
   body.append("file", file);
 
