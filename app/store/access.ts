@@ -54,7 +54,7 @@ const DEFAULT_CHATCHAT_URL = isApp ? CHATCHAT_BASE_URL : ApiPath.CHATCHAT;
 
 const DEFAULT_ACCESS_STATE = {
   accessCode: "",
-  useCustomConfig: false,
+  useCustomConfig: true,
 
   provider: ServiceProvider.OpenAI,
 

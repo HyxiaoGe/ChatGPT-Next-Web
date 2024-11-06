@@ -17,7 +17,7 @@ export const ANTHROPIC_BASE_URL = "https://api.anthropic.com";
 export const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/";
 
 export const BAIDU_BASE_URL = "https://aip.baidubce.com";
-export const BAIDU_OATUH_URL = `${BAIDU_BASE_URL}/oauth/2.0/token`;
+export const BAIDU_OAUTH_URL = `${BAIDU_BASE_URL}/oauth/2.0/token`;
 
 export const BYTEDANCE_BASE_URL = "https://ark.cn-beijing.volces.com";
 

@@ -130,6 +130,8 @@ export class ErnieApi implements LLMApi {
     try {
       let chatPath = this.path(Baidu.ChatPath(modelConfig.model));
 
+      console.log("[Request] Baidu chat path: ", chatPath);
+
       // getAccessToken can not run in browser, because cors error
       if (!!getClientConfig()?.isApp) {
         const accessStore = useAccessStore.getState();

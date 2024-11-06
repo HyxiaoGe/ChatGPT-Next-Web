@@ -106,6 +106,14 @@ if (mode !== "export") {
         source: "/api/alibaba/v1/:path",
         destination: "https://dashscope.aliyuncs.com/compatible-mode/v1/:path",
       },
+      {
+        source: "/api/baidu/oauth/2.0/token",
+        destination: "https://aip.baidubce.com/oauth/2.0/token",
+      },
+      {
+        source: "/api/baidu/:path*",
+        destination: "https://aip.baidubce.com/:path*",
+      },
     ];
     
     return {
