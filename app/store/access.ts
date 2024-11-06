@@ -78,8 +78,8 @@ const DEFAULT_ACCESS_STATE = {
 
   // baidu
   baiduUrl: DEFAULT_BAIDU_URL,
-  baiduApiKey: "",
-  baiduSecretKey: "",
+  baiduApiKey: `${process.env.NEXT_PUBLIC_BAIDU_API_KEY}`,
+  baiduSecretKey: `${process.env.NEXT_PUBLIC_BAIDU_SECRET_KEY}`,
 
   // bytedance
   bytedanceUrl: DEFAULT_BYTEDANCE_URL,
