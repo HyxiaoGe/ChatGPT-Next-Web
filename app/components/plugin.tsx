@@ -9,14 +9,13 @@ import styles from "./mask.module.scss";
 import pluginStyles from "./plugin.module.scss";
 
 import EditIcon from "../icons/edit.svg";
-import AddIcon from "../icons/add.svg";
 import CloseIcon from "../icons/close.svg";
 import DeleteIcon from "../icons/delete.svg";
 import ConfirmIcon from "../icons/confirm.svg";
 import ReloadIcon from "../icons/reload.svg";
 import GithubIcon from "../icons/github.svg";
 
-import { Plugin, usePluginStore, FunctionToolService } from "../store/plugin";
+import { Plugin, usePluginStore } from "../store/plugin";
 import {
   PasswordInput,
   List,
@@ -53,7 +52,7 @@ export function PluginPage() {
 
   const [editingPluginId, setEditingPluginId] = useState<string | undefined>();
   const editingPlugin = pluginStore.get(editingPluginId);
-  const editingPluginTool = FunctionToolService.get(editingPlugin?.id);
+  // const editingPluginTool = FunctionToolService.get(editingPlugin?.id);
   const closePluginModal = () => setEditingPluginId(undefined);
 
   const onChangePlugin = useDebouncedCallback((editingPlugin, e) => {
@@ -68,9 +67,9 @@ export function PluginPage() {
           if (content != editingPlugin.content) {
             pluginStore.updatePlugin(editingPlugin.id, (plugin) => {
               plugin.content = content;
-              const tool = FunctionToolService.add(plugin, true);
-              plugin.title = tool.api.definition.info.title;
-              plugin.version = tool.api.definition.info.version;
+              // const tool = FunctionToolService.add(plugin, true);
+              // plugin.title = tool.api.definition.info.title;
+              // plugin.version = tool.api.definition.info.version;
             });
           }
         })
@@ -106,9 +105,9 @@ export function PluginPage() {
       .then((content) => {
         pluginStore.updatePlugin(editingPlugin.id, (plugin) => {
           plugin.content = content;
-          const tool = FunctionToolService.add(plugin, true);
-          plugin.title = tool.api.definition.info.title;
-          plugin.version = tool.api.definition.info.version;
+          // const tool = FunctionToolService.add(plugin, true);
+          // plugin.title = tool.api.definition.info.title;
+          // plugin.version = tool.api.definition.info.version;
         });
       })
       .catch((e) => {
@@ -158,16 +157,16 @@ export function PluginPage() {
               onInput={(e) => onSearch(e.currentTarget.value)}
             />
 
-            <IconButton
-              className={styles["mask-create"]}
-              icon={<AddIcon />}
-              text={Locale.Plugin.Page.Create}
-              bordered
-              onClick={() => {
-                const createdPlugin = pluginStore.create();
-                setEditingPluginId(createdPlugin.id);
-              }}
-            />
+            {/*<IconButton*/}
+            {/*  className={styles["mask-create"]}*/}
+            {/*  icon={<AddIcon />}*/}
+            {/*  text={Locale.Plugin.Page.Create}*/}
+            {/*  bordered*/}
+            {/*  onClick={() => {*/}
+            {/*    const createdPlugin = pluginStore.create();*/}
+            {/*    setEditingPluginId(createdPlugin.id);*/}
+            {/*  }}*/}
+            {/*/>*/}
           </div>
 
           <div>
@@ -200,9 +199,9 @@ export function PluginPage() {
                       {m.title}@<small>{m.version}</small>
                     </div>
                     <div className={styles["mask-info"] + " one-line"}>
-                      {Locale.Plugin.Item.Info(
-                        FunctionToolService.add(m).length,
-                      )}
+                      {/*{Locale.Plugin.Item.Info(*/}
+                      {/*  FunctionToolService.add(m).length,*/}
+                      {/*)}*/}
                     </div>
                   </div>
                 </div>
@@ -247,75 +246,75 @@ export function PluginPage() {
               />,
             ]}
           >
-            <List>
-              <ListItem title={Locale.Plugin.EditModal.Auth}>
-                <select
-                  value={editingPlugin?.authType}
-                  onChange={(e) => {
-                    pluginStore.updatePlugin(editingPlugin.id, (plugin) => {
-                      plugin.authType = e.target.value;
-                    });
-                  }}
-                >
-                  <option value="">{Locale.Plugin.Auth.None}</option>
-                  <option value="bearer">{Locale.Plugin.Auth.Bearer}</option>
-                  <option value="basic">{Locale.Plugin.Auth.Basic}</option>
-                  <option value="custom">{Locale.Plugin.Auth.Custom}</option>
-                </select>
-              </ListItem>
-              {["bearer", "basic", "custom"].includes(
-                editingPlugin.authType as string,
-              ) && (
-                <ListItem title={Locale.Plugin.Auth.Location}>
-                  <select
-                    value={editingPlugin?.authLocation}
-                    onChange={(e) => {
-                      pluginStore.updatePlugin(editingPlugin.id, (plugin) => {
-                        plugin.authLocation = e.target.value;
-                      });
-                    }}
-                  >
-                    <option value="header">
-                      {Locale.Plugin.Auth.LocationHeader}
-                    </option>
-                    <option value="query">
-                      {Locale.Plugin.Auth.LocationQuery}
-                    </option>
-                    <option value="body">
-                      {Locale.Plugin.Auth.LocationBody}
-                    </option>
-                  </select>
-                </ListItem>
-              )}
-              {editingPlugin.authType == "custom" && (
-                <ListItem title={Locale.Plugin.Auth.CustomHeader}>
-                  <input
-                    type="text"
-                    value={editingPlugin?.authHeader}
-                    onChange={(e) => {
-                      pluginStore.updatePlugin(editingPlugin.id, (plugin) => {
-                        plugin.authHeader = e.target.value;
-                      });
-                    }}
-                  ></input>
-                </ListItem>
-              )}
-              {["bearer", "basic", "custom"].includes(
-                editingPlugin.authType as string,
-              ) && (
-                <ListItem title={Locale.Plugin.Auth.Token}>
-                  <PasswordInput
-                    type="text"
-                    value={editingPlugin?.authToken}
-                    onChange={(e) => {
-                      pluginStore.updatePlugin(editingPlugin.id, (plugin) => {
-                        plugin.authToken = e.currentTarget.value;
-                      });
-                    }}
-                  ></PasswordInput>
-                </ListItem>
-              )}
-            </List>
+            {/*<List>*/}
+            {/*  <ListItem title={Locale.Plugin.EditModal.Auth}>*/}
+            {/*    <select*/}
+            {/*      value={editingPlugin?.authType}*/}
+            {/*      onChange={(e) => {*/}
+            {/*        pluginStore.updatePlugin(editingPlugin.id, (plugin) => {*/}
+            {/*          plugin.authType = e.target.value;*/}
+            {/*        });*/}
+            {/*      }}*/}
+            {/*    >*/}
+            {/*      <option value="">{Locale.Plugin.Auth.None}</option>*/}
+            {/*      <option value="bearer">{Locale.Plugin.Auth.Bearer}</option>*/}
+            {/*      <option value="basic">{Locale.Plugin.Auth.Basic}</option>*/}
+            {/*      <option value="custom">{Locale.Plugin.Auth.Custom}</option>*/}
+            {/*    </select>*/}
+            {/*  </ListItem>*/}
+            {/*  {["bearer", "basic", "custom"].includes(*/}
+            {/*    editingPlugin.authType as string,*/}
+            {/*  ) && (*/}
+            {/*    <ListItem title={Locale.Plugin.Auth.Location}>*/}
+            {/*      <select*/}
+            {/*        value={editingPlugin?.authLocation}*/}
+            {/*        onChange={(e) => {*/}
+            {/*          pluginStore.updatePlugin(editingPlugin.id, (plugin) => {*/}
+            {/*            plugin.authLocation = e.target.value;*/}
+            {/*          });*/}
+            {/*        }}*/}
+            {/*      >*/}
+            {/*        <option value="header">*/}
+            {/*          {Locale.Plugin.Auth.LocationHeader}*/}
+            {/*        </option>*/}
+            {/*        <option value="query">*/}
+            {/*          {Locale.Plugin.Auth.LocationQuery}*/}
+            {/*        </option>*/}
+            {/*        <option value="body">*/}
+            {/*          {Locale.Plugin.Auth.LocationBody}*/}
+            {/*        </option>*/}
+            {/*      </select>*/}
+            {/*    </ListItem>*/}
+            {/*  )}*/}
+            {/*  {editingPlugin.authType == "custom" && (*/}
+            {/*    <ListItem title={Locale.Plugin.Auth.CustomHeader}>*/}
+            {/*      <input*/}
+            {/*        type="text"*/}
+            {/*        value={editingPlugin?.authHeader}*/}
+            {/*        onChange={(e) => {*/}
+            {/*          pluginStore.updatePlugin(editingPlugin.id, (plugin) => {*/}
+            {/*            plugin.authHeader = e.target.value;*/}
+            {/*          });*/}
+            {/*        }}*/}
+            {/*      ></input>*/}
+            {/*    </ListItem>*/}
+            {/*  )}*/}
+            {/*  {["bearer", "basic", "custom"].includes(*/}
+            {/*    editingPlugin.authType as string,*/}
+            {/*  ) && (*/}
+            {/*    <ListItem title={Locale.Plugin.Auth.Token}>*/}
+            {/*      <PasswordInput*/}
+            {/*        type="text"*/}
+            {/*        value={editingPlugin?.authToken}*/}
+            {/*        onChange={(e) => {*/}
+            {/*          pluginStore.updatePlugin(editingPlugin.id, (plugin) => {*/}
+            {/*            plugin.authToken = e.currentTarget.value;*/}
+            {/*          });*/}
+            {/*        }}*/}
+            {/*      ></PasswordInput>*/}
+            {/*    </ListItem>*/}
+            {/*  )}*/}
+            {/*</List>*/}
             <List>
               <ListItem title={Locale.Plugin.EditModal.Content}>
                 <div className={pluginStyles["plugin-schema"]}>
@@ -350,13 +349,13 @@ export function PluginPage() {
                   </div>
                 }
               ></ListItem>
-              {editingPluginTool?.tools.map((tool, index) => (
-                <ListItem
-                  key={index}
-                  title={tool?.function?.name}
-                  subTitle={tool?.function?.description}
-                />
-              ))}
+              {/*{editingPluginTool?.tools.map((tool, index) => (*/}
+              {/*  <ListItem*/}
+              {/*    key={index}*/}
+              {/*    title={tool?.function?.name}*/}
+              {/*    subTitle={tool?.function?.description}*/}
+              {/*  />*/}
+              {/*))}*/}
             </List>
           </Modal>
         </div>

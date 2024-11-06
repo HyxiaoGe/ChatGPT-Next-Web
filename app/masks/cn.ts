@@ -33,7 +33,7 @@ export const CN_MASKS: BuiltinMask[] = [
       },
     ],
     modelConfig: {
-      model: "gpt-3.5-turbo",
+      model: "qwen-turbo",
       temperature: 1,
       max_tokens: 2000,
       presence_penalty: 0,
@@ -59,7 +59,7 @@ export const CN_MASKS: BuiltinMask[] = [
       },
     ],
     modelConfig: {
-      model: "gpt-3.5-turbo",
+      model: "qwen-turbo",
       temperature: 1,
       max_tokens: 2000,
       presence_penalty: 0,
@@ -74,18 +74,18 @@ export const CN_MASKS: BuiltinMask[] = [
   },
   {
     avatar: "1f978",
-    name: "机器学习",
+    name: "新闻评论",
     context: [
       {
         id: "ml-0",
         role: "user",
         content:
-          "我想让你担任机器学习工程师。我会写一些机器学习的概念，你的工作就是用通俗易懂的术语来解释它们。这可能包括提供构建模型的分步说明、给出所用的技术或者理论、提供评估函数等。我的问题是",
+          " 你是一位专业新闻评论员，以独到见解和深度分析见长。现在请你根据以下主题，撰写一篇立意新颖、论据充分且引人深思的新闻评论文章。请确保在评论中涵盖至少2个核心观点，并引用3条相关数据或事实作为支撑, 以吸引读者关注并引发深入讨论。",
         date: "",
       },
     ],
     modelConfig: {
-      model: "gpt-3.5-turbo",
+      model: "qwen-turbo",
       temperature: 1,
       max_tokens: 2000,
       presence_penalty: 0,
@@ -111,7 +111,7 @@ export const CN_MASKS: BuiltinMask[] = [
       },
     ],
     modelConfig: {
-      model: "gpt-3.5-turbo",
+      model: "qwen-turbo",
       temperature: 1,
       max_tokens: 2000,
       presence_penalty: 0,
@@ -137,7 +137,7 @@ export const CN_MASKS: BuiltinMask[] = [
       },
     ],
     modelConfig: {
-      model: "gpt-3.5-turbo",
+      model: "qwen-turbo",
       temperature: 1,
       max_tokens: 2000,
       presence_penalty: 0,
@@ -163,7 +163,7 @@ export const CN_MASKS: BuiltinMask[] = [
       },
     ],
     modelConfig: {
-      model: "gpt-3.5-turbo",
+      model: "qwen-turbo",
       temperature: 1,
       max_tokens: 2000,
       presence_penalty: 0,
@@ -189,7 +189,7 @@ export const CN_MASKS: BuiltinMask[] = [
       },
     ],
     modelConfig: {
-      model: "gpt-3.5-turbo",
+      model: "qwen-turbo",
       temperature: 1,
       max_tokens: 2000,
       presence_penalty: 0,
@@ -215,7 +215,7 @@ export const CN_MASKS: BuiltinMask[] = [
       },
     ],
     modelConfig: {
-      model: "gpt-3.5-turbo",
+      model: "qwen-turbo",
       temperature: 1,
       max_tokens: 2000,
       presence_penalty: 0,
@@ -247,7 +247,7 @@ export const CN_MASKS: BuiltinMask[] = [
       },
     ],
     modelConfig: {
-      model: "gpt-3.5-turbo",
+      model: "qwen-turbo",
       temperature: 0.5,
       max_tokens: 2000,
       presence_penalty: 0,
@@ -273,7 +273,7 @@ export const CN_MASKS: BuiltinMask[] = [
       },
     ],
     modelConfig: {
-      model: "gpt-3.5-turbo",
+      model: "qwen-turbo",
       temperature: 1,
       max_tokens: 2000,
       presence_penalty: 0,
@@ -306,7 +306,7 @@ export const CN_MASKS: BuiltinMask[] = [
       },
     ],
     modelConfig: {
-      model: "gpt-3.5-turbo",
+      model: "qwen-turbo",
       temperature: 1,
       max_tokens: 2000,
       presence_penalty: 0,
@@ -339,7 +339,7 @@ export const CN_MASKS: BuiltinMask[] = [
       },
     ],
     modelConfig: {
-      model: "gpt-3.5-turbo",
+      model: "qwen-turbo",
       temperature: 1,
       max_tokens: 2000,
       presence_penalty: 0,
@@ -397,7 +397,7 @@ export const CN_MASKS: BuiltinMask[] = [
       },
     ],
     modelConfig: {
-      model: "gpt-3.5-turbo",
+      model: "qwen-turbo",
       temperature: 1,
       max_tokens: 2000,
       presence_penalty: 0,

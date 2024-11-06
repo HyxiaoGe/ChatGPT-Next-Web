@@ -581,7 +581,13 @@ export function ChatActions(props: {
             setShowPluginSelector(true);
           }
         }}
-        text={Locale.Plugin.Name}
+        // text={Locale.Plugin.Name}
+        text={(() => {
+          const currentPluginId = chatStore.currentSession().mask?.plugin?.[0];
+          return currentPluginId && plugins[currentPluginId]
+              ? plugins[currentPluginId].title
+              : Locale.Plugin.Name;
+        })()}
         icon={<PluginIcon />}
       />
       {showPluginSelector && (
