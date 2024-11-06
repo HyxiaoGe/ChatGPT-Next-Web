@@ -32,6 +32,8 @@ export const XAI_BASE_URL = "https://api.x.ai";
 
 export const CHATGLM_BASE_URL = "https://open.bigmodel.cn";
 
+export const CHATCHAT_BASE_URL = "http://127.0.0.1:7861";
+
 export const CACHE_URL_PREFIX = "/api/cache";
 export const UPLOAD_URL = `${CACHE_URL_PREFIX}/upload`;
 
@@ -65,6 +67,7 @@ export enum ApiPath {
   Artifacts = "/api/artifacts",
   XAI = "/api/xai",
   ChatGLM = "/api/chatglm",
+  CHATCHAT = "",
 }
 
 export enum SlotID {
@@ -119,6 +122,7 @@ export enum ServiceProvider {
   Iflytek = "Iflytek",
   XAI = "XAI",
   ChatGLM = "ChatGLM",
+  CHATCHAT = "chatchat",
 }
 
 // Google API safety settings, see https://ai.google.dev/gemini-api/docs/safety-settings
@@ -143,6 +147,7 @@ export enum ModelProvider {
   Iflytek = "Iflytek",
   XAI = "XAI",
   ChatGLM = "ChatGLM",
+  CHATCHAT = "chatchat",
 }
 
 export const Stability = {
@@ -231,6 +236,14 @@ export const Iflytek = {
 export const XAI = {
   ExampleEndpoint: XAI_BASE_URL,
   ChatPath: "v1/chat/completions",
+};
+
+export const CHATCHAT = {
+  ExampleEndpoint: CHATCHAT_BASE_URL,
+  // ChatPath: "/chat/completions",
+  KBChatPath: "/kb_chat",
+  UploadFilePath: "/knowledge_base/upload_docs",
+  FileListPath: "/knowledge_base/list_files",
 };
 
 export const ChatGLM = {
@@ -403,6 +416,8 @@ const chatglmModels = [
   "glm-4-flash",
 ];
 
+const chatchatModels = ["qwen1.5-chat"];
+
 let seq = 1000; // 内置的模型序号生成器从1000开始
 export const DEFAULT_MODELS = [
   ...openaiModels.map((name) => ({
@@ -535,6 +550,17 @@ export const DEFAULT_MODELS = [
       providerName: "ChatGLM",
       providerType: "chatglm",
       sorted: 12,
+    },
+  })),
+  ...chatchatModels.map((name) => ({
+    name,
+    available: true,
+    sorted: seq++,
+    provider: {
+      id: "chatchat",
+      providerName: "CHATCHAT",
+      providerType: "chatchat",
+      sorted: 13,
     },
   })),
 ] as const;

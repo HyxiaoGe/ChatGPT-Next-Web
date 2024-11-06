@@ -67,6 +67,8 @@ export const DEFAULT_CONFIG = {
     providerName: "Alibaba" as ServiceProvider,
     temperature: 0.5,
     top_p: 1,
+    top_k: 3,
+    score_threshold: 2,
     max_tokens: 4000,
     presence_penalty: 0,
     frequency_penalty: 0,

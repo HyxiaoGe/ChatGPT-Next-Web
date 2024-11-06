@@ -1,20 +1,20 @@
 import {
-  GoogleSafetySettingsThreshold,
-  ServiceProvider,
-  StoreKey,
-  ApiPath,
-  OPENAI_BASE_URL,
-  ANTHROPIC_BASE_URL,
-  GEMINI_BASE_URL,
-  BAIDU_BASE_URL,
-  BYTEDANCE_BASE_URL,
-  ALIBABA_BASE_URL,
-  TENCENT_BASE_URL,
-  MOONSHOT_BASE_URL,
-  STABILITY_BASE_URL,
-  IFLYTEK_BASE_URL,
-  XAI_BASE_URL,
-  CHATGLM_BASE_URL,
+    GoogleSafetySettingsThreshold,
+    ServiceProvider,
+    StoreKey,
+    ApiPath,
+    OPENAI_BASE_URL,
+    ANTHROPIC_BASE_URL,
+    GEMINI_BASE_URL,
+    BAIDU_BASE_URL,
+    BYTEDANCE_BASE_URL,
+    ALIBABA_BASE_URL,
+    TENCENT_BASE_URL,
+    MOONSHOT_BASE_URL,
+    STABILITY_BASE_URL,
+    IFLYTEK_BASE_URL,
+    XAI_BASE_URL,
+    CHATGLM_BASE_URL, CHATCHAT_BASE_URL,
 } from "../constant";
 import { getHeaders } from "../client/api";
 import { getClientConfig } from "../config/client";
@@ -49,6 +49,8 @@ const DEFAULT_IFLYTEK_URL = isApp ? IFLYTEK_BASE_URL : ApiPath.Iflytek;
 const DEFAULT_XAI_URL = isApp ? XAI_BASE_URL : ApiPath.XAI;
 
 const DEFAULT_CHATGLM_URL = isApp ? CHATGLM_BASE_URL : ApiPath.ChatGLM;
+
+const DEFAULT_CHATCHAT_URL = isApp ? CHATCHAT_BASE_URL : ApiPath.CHATCHAT;
 
 const DEFAULT_ACCESS_STATE = {
   accessCode: "",
@@ -110,6 +112,9 @@ const DEFAULT_ACCESS_STATE = {
   // xai
   xaiUrl: DEFAULT_XAI_URL,
   xaiApiKey: "",
+
+// chatchat
+chatchatUrl: DEFAULT_CHATCHAT_URL,
 
   // chatglm
   chatglmUrl: DEFAULT_CHATGLM_URL,
