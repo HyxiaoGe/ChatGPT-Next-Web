@@ -64,13 +64,7 @@ if (mode !== "export") {
 
   nextConfig.rewrites = async () => {
     const ret = [
-      // adjust for previous version directly using "/api/proxy/" as proxy base route
-      // {
-      //   source: "/api/proxy/v1/:path*",
-      //   destination: "https://api.openai.com/v1/:path*",
-      // },
       {
-        // https://{resource_name}.openai.azure.com/openai/deployments/{deploy_name}/chat/completions
         source: "/api/proxy/azure/:resource_name/deployments/:deploy_name/:path*",
         destination: "https://:resource_name.openai.azure.com/openai/deployments/:deploy_name/:path*",
       },
@@ -99,16 +93,8 @@ if (mode !== "export") {
         destination: "https://dashscope.aliyuncs.com/api/:path*",
       },
       {
-        source: "/api/alibaba/v1/chat/completions",
-        destination: "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
-      },
-      {
         source: "/api/alibaba/v1/:path",
         destination: "https://dashscope.aliyuncs.com/compatible-mode/v1/:path",
-      },
-      {
-        source: "/api/baidu/oauth/2.0/token",
-        destination: "https://aip.baidubce.com/oauth/2.0/token",
       },
       {
         source: "/api/baidu/:path*",
