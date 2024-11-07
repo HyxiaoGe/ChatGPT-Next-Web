@@ -9,7 +9,7 @@ export const getBuildConfig = () => {
   }
 
   const buildMode = process.env.BUILD_MODE ?? "standalone";
-  const isApp = !!process.env.NEXT_PUBLIC_BAIDU_APP_ID;
+  const isApp = !!process.env.BUILD_APP;
   const version = "v" + tauriConfig.package.version;
 
   const commitInfo = (() => {

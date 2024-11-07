@@ -63,10 +63,8 @@ export const DEFAULT_CONFIG = {
   models: DEFAULT_MODELS as any as LLMModel[],
 
   modelConfig: {
-    // model: "qwen-turbo" as ModelType,
-    // providerName: "Alibaba" as ServiceProvider,
-    model: "ernie-3.5-8k" as ModelType,
-    providerName: "Baidu" as ServiceProvider,
+    model: "qwen-turbo" as ModelType,
+    providerName: "Alibaba" as ServiceProvider,
     temperature: 0.5,
     top_p: 1,
     top_k: 3,
