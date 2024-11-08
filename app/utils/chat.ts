@@ -1,7 +1,7 @@
 import {
   CACHE_URL_PREFIX,
   UPLOAD_URL,
-  REQUEST_TIMEOUT_MS,
+  REQUEST_TIMEOUT_MS, CHATCHAT_BASE_URL, CHATCHAT,
 } from "@/app/constant";
 import { RequestMessage } from "@/app/client/api";
 import Locale from "@/app/locales";
@@ -149,6 +149,41 @@ export function uploadFile(file: File): Promise<string> {
         }
         throw Error(`upload Error: ${res?.msg}`);
       });
+}
+
+export async function uploadFileToChatChat(file: File): Promise<string> {
+  const formData = new FormData();
+
+  try {
+    formData.append("files", file);
+
+    formData.append("knowledge_base_name", "samples");
+    formData.append("to_vector_store", "true");
+    formData.append("override", "false");
+    formData.append("not_refresh_vs_cache", "false");
+    formData.append("chunk_size", "750");
+    formData.append("chunk_overlap", "150");
+    formData.append("zh_title_enhance", "false");
+    formData.append("docs", "");
+
+    const response = await fetch(CHATCHAT.UploadFilePath, {
+      method: "POST",
+      body: formData,
+      headers: {
+        accept: "application/json",
+      },
+      mode: "cors",
+      credentials: "include",
+    });
+    if (!response.ok) {
+      throw new Error(`Upload failed with status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (e) {
+    console.error("[Request] Failed to upload documents", e);
+    throw e;
+  }
 }
 
 export function uploadCloudFile(file: File): Promise<string> {

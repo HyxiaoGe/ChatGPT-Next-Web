@@ -358,34 +358,34 @@ export const useChatStore = createPersistStore(
           session.lastUpdate = Date.now();
         });
         get().updateStat(message);
-        get().summarizeSession();
+        // get().summarizeSession();
       },
 
-      async onUserInput(content: string, attachImages?: string[]) {
+      async onUserInput(content: string, attachFiles?: string[]) {
         const session = get().currentSession();
         const modelConfig = session.mask.modelConfig;
 
         const plugin = session.mask.plugin;
         console.log("plugin", plugin);
 
+        console.log("[User Input] before template: ", content, modelConfig);
+
         const userContent = fillTemplateWith(content, modelConfig);
         console.log("[User Input] after template: ", userContent);
 
         let mContent: string | MultimodalContent[] = userContent;
+        const api: ClientApi = getClientApi(modelConfig.providerName);
 
-        if (attachImages && attachImages.length > 0) {
+        if (attachFiles && attachFiles.length > 0) {
           mContent = [
             ...(userContent
               ? [{ type: "text" as const, text: userContent }]
               : []),
-            ...attachImages.map((url) => ({
+            ...attachFiles.map((url) => ({
               type: "file_url" as const,
               file_url: { url },
             })),
           ];
-
-
-
         }
 
         let userMessage: ChatMessage = createMessage({
@@ -416,7 +416,6 @@ export const useChatStore = createPersistStore(
           ]);
         });
 
-        const api: ClientApi = getClientApi(modelConfig.providerName);
         // make request
         api.llm.chat({
           messages: sendMessages,

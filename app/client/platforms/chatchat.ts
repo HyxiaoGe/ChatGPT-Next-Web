@@ -6,14 +6,7 @@ import {
   CHATCHAT_BASE_URL,
   REQUEST_TIMEOUT_MS,
 } from "@/app/constant";
-import {
-  ChatMessageTool,
-  useAccessStore,
-  useAppConfig,
-  useChatStore,
-  usePluginStore,
-} from "@/app/store";
-import { stream } from "@/app/utils/chat";
+import { useAccessStore, useAppConfig, useChatStore } from "@/app/store";
 import {
   ChatOptions,
   getHeaders,
@@ -21,10 +14,16 @@ import {
   LLMModel,
   SpeechOptions,
 } from "../api";
+import Locale from "../../locales";
 import { getClientConfig } from "@/app/config/client";
 import { getMessageTextContent } from "@/app/utils";
 import { fetch } from "@/app/utils/stream";
-import {array} from "prop-types";
+import {
+  EventStreamContentType,
+  fetchEventSource,
+} from "@fortaine/fetch-event-source";
+import { prettyObject } from "@/app/utils/format";
+import { isEmpty } from "lodash-es";
 
 export interface RequestPayload {
   query: string;
@@ -78,13 +77,9 @@ export class CHATCHATApi implements LLMApi {
   }
 
   async chat(options: ChatOptions) {
-    console.log("--------------------chat------------------------");
-    console.log("options", options);
     const history: ChatOptions["messages"] = [];
-    console.log("options.messages", options.messages);
     let queryText = "";
     for (const v of options.messages) {
-      console.log("v", v);
       const content = getMessageTextContent(v);
       queryText = content;
       history.push({ role: v.role, content });
@@ -112,15 +107,11 @@ export class CHATCHATApi implements LLMApi {
       max_tokens: modelConfig.max_tokens,
     };
 
-    // console.log("[Request] chatchat payload: ", requestPayload);
-
     const shouldStream = !!options.config.stream;
     const controller = new AbortController();
     options.onController?.(controller);
     try {
-      // const chatPath = this.path(CHATCHAT.ChatPath);
       const kbChatPath = this.path(CHATCHAT.KBChatPath);
-      console.log("path: ", kbChatPath);
       const chatPayload = {
         method: "POST",
         body: JSON.stringify(requestPayload),
@@ -133,67 +124,118 @@ export class CHATCHATApi implements LLMApi {
         REQUEST_TIMEOUT_MS,
       );
       if (shouldStream) {
-        // const [tools, funcs] = usePluginStore
-        //   .getState()
-        //   .getAsTools(
-        //     useChatStore.getState().currentSession().mask?.plugin || [],
-        //   );
-        return stream(
-          kbChatPath,
-          requestPayload,
-          getHeaders(),
-          array as any,
-          array as any,
-          controller,
-          // parseSSE
-          (text: string, runTools: ChatMessageTool[]) => {
-            console.log("parseSSE", text, runTools);
-            const json = JSON.parse(text);
-            const choices = json.choices as Array<{
-              delta: {
-                content: string;
-                tool_calls: ChatMessageTool[];
-              };
-            }>;
+        let responseText = "";
+        let remainText = "";
+        let finished = false;
+        let animationStarted = false;
 
-            const tool_calls = choices[0]?.delta?.tool_calls;
-            if (tool_calls?.length > 0) {
-              const index = tool_calls[0]?.index;
-              const id = tool_calls[0]?.id;
-              const args = tool_calls[0]?.function?.arguments;
-              if (id) {
-                runTools.push({
-                  id,
-                  type: tool_calls[0]?.type,
-                  function: {
-                    name: tool_calls[0]?.function?.name as string,
-                    arguments: args,
-                  },
-                });
-              } else {
-                // @ts-ignore
-                runTools[index]["function"]["arguments"] += args;
-              }
+        function startAnimation() {
+          if (animationStarted) return;
+          animationStarted = true;
+          animateResponseText();
+        }
+
+        // animate response to make it looks smooth
+        function animateResponseText() {
+          if (controller.signal.aborted) {
+            responseText += remainText;
+            console.log("[Response Animation] finished");
+            if (responseText?.length === 0) {
+              options.onError?.(new Error("empty response from server"));
             }
-            return choices[0]?.delta?.content;
+            return;
+          }
+
+          if (remainText.length > 0) {
+            const fetchCount = Math.max(1, Math.round(remainText.length / 60));
+            const fetchText = remainText.slice(0, fetchCount);
+            responseText += fetchText;
+            remainText = remainText.slice(fetchCount);
+            options.onUpdate?.(responseText, fetchText);
+          }
+
+          requestAnimationFrame(animateResponseText);
+        }
+
+        // start animaion
+        animateResponseText();
+
+        const finish = () => {
+          if (!finished) {
+            finished = true;
+            options.onFinish(responseText + remainText);
+          }
+        };
+
+        controller.signal.onabort = finish;
+
+        fetchEventSource(kbChatPath, {
+          fetch: fetch as any,
+          ...chatPayload,
+          async onopen(res) {
+            clearTimeout(requestTimeoutId);
+            const contentType = res.headers.get("content-type");
+
+            if (contentType?.startsWith("text/plain")) {
+              responseText = await res.clone().text();
+              return finish();
+            }
+
+            if (
+              !res.ok ||
+              !res.headers
+                .get("content-type")
+                ?.startsWith(EventStreamContentType) ||
+              res.status !== 200
+            ) {
+              const responseTexts = [responseText];
+              let extraInfo = await res.clone().text();
+              try {
+                const resJson = await res.clone().json();
+                extraInfo = prettyObject(resJson);
+              } catch {}
+
+              if (res.status === 401) {
+                responseTexts.push(Locale.Error.Unauthorized);
+              }
+
+              if (extraInfo) {
+                responseTexts.push(extraInfo);
+              }
+
+              responseText = responseTexts.join("\n\n");
+
+              return finish();
+            }
           },
-          // processToolMessage, include tool_calls message and tool call results
-          (
-            requestPayload: RequestPayload,
-            toolCallMessage: any,
-            toolCallResult: any[],
-          ) => {
-            // @ts-ignore
-            requestPayload?.messages?.splice(
-              // @ts-ignore
-              requestPayload?.messages?.length,
-              0,
-              toolCallMessage,
-              ...toolCallResult,
-            );
+          onmessage(msg) {
+            if (msg.data === "[DONE]" || finished) {
+              return finish();
+            }
+            const text = msg.data;
+            try {
+              if (isEmpty(text)) {
+                return;
+              }
+              const json = JSON.parse(text);
+              const delta = json.choices?.at(0)?.delta?.content ?? "";
+              if (delta) {
+                remainText += delta;
+                startAnimation();
+              }
+            } catch (e) {
+              console.error("[Request] parse error", text, msg);
+            }
           },
-          options,
-        );
+          onclose() {
+            finish();
+          },
+          onerror(e) {
+            options.onError?.(e);
+            throw e;
+          },
+          openWhenHidden: true,
+        });
       } else {
         const res = await fetch(kbChatPath, chatPayload);
         clearTimeout(requestTimeoutId);

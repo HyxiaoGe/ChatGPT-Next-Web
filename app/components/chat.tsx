@@ -73,7 +73,7 @@ import {
   useMobileScreen,
 } from "../utils";
 
-import { uploadFile as uploadFileRemote } from "@/app/utils/chat";
+import {uploadFile as uploadFileRemote, uploadFileToChatChat} from "@/app/utils/chat";
 
 import dynamic from "next/dynamic";
 
@@ -1485,6 +1485,8 @@ function _Chat() {
     const files: string[] = [];
     files.push(...attachFiles);
 
+    const providerName = chatStore.currentSession().mask.modelConfig?.providerName
+
     files.push(
       ...(await new Promise<string[]>((res, rej) => {
         const fileInput = document.createElement("input");
@@ -1496,6 +1498,9 @@ function _Chat() {
           const filesData: string[] = [];
           for (let i = 0; i < files.length; i++) {
             const file = event.target.files[i];
+            if (providerName === 'CHATCHAT') {
+              uploadFileToChatChat(file)
+            }
             uploadFileRemote(file)
               .then((dataUrl) => {
                 filesData.push(dataUrl);

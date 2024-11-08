@@ -103,6 +103,20 @@ if (mode !== "export") {
       {
         source: '/api/files/:path*',
         destination: 'http://192.168.250.217/apps/files/:path*'
+      },
+      {
+        source: "/chat/:path*",
+        destination: 'http://127.0.0.1:7861/chat/chat/:path*',
+      },
+      {
+        source: '/kb_chat/:path*',
+        destination: 'http://127.0.0.1:7861/chat/kb_chat/:path*',
+        basePath: false,
+      },
+      {
+        source: '/knowledge_base/upload_docs',  // 固定匹配这个路径
+        destination: 'http://127.0.0.1:7861/knowledge_base/upload_docs',
+        basePath: false,
       }
     ];
     

@@ -1,12 +1,14 @@
 import { getClientConfig } from "../config/client";
 import {
   ACCESS_CODE_PREFIX,
+  CHATCHAT,
+  CHATCHAT_BASE_URL,
   ModelProvider,
   ServiceProvider,
 } from "../constant";
 import {
-  ChatMessageTool,
   ChatMessage,
+  ChatMessageTool,
   ModelType,
   useAccessStore,
   useChatStore,
@@ -22,7 +24,7 @@ import { MoonshotApi } from "./platforms/moonshot";
 import { SparkApi } from "./platforms/iflytek";
 import { XAIApi } from "./platforms/xai";
 import { ChatGLMApi } from "./platforms/glm";
-import {CHATCHATApi} from "@/app/client/platforms/chatchat";
+import { CHATCHATApi } from "@/app/client/platforms/chatchat";
 
 export const ROLES = ["system", "user", "assistant"] as const;
 export type MessageRole = (typeof ROLES)[number];
@@ -128,6 +130,20 @@ interface ChatProvider {
 
   chat: () => void;
   usage: () => void;
+}
+
+export interface UploadFileOptions {
+  files: (File | string)[];
+  knowledgeBaseName: string;
+  config: {
+    toVectorStore?: boolean;
+    override?: boolean;
+    notRefreshVsCache?: boolean;
+    chunkSize?: number;
+    chunkOverlap?: number;
+    zhTitleEnhance?: boolean;
+  };
+
 }
 
 export class ClientApi {
