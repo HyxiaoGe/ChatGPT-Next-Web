@@ -7,7 +7,7 @@ export class YliyunCloud{
     private static instance: YliyunCloud;
 
     constructor(
-        public enabled: boolean = false,
+        public enabled: boolean = true,
         public apiKey: string = '',
         public host: string = '',
         public listUrl: string = '',

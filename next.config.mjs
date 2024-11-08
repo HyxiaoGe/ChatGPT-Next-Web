@@ -100,6 +100,10 @@ if (mode !== "export") {
         source: "/api/baidu/:path*",
         destination: "https://aip.baidubce.com/:path*",
       },
+      {
+        source: '/api/files/:path*',
+        destination: 'http://192.168.250.217/apps/files/:path*'
+      }
     ];
     
     return {

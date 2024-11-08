@@ -151,6 +151,26 @@ export function uploadFile(file: File): Promise<string> {
       });
 }
 
+export function uploadCloudFile(file: File): Promise<string> {
+    const body = new FormData();
+    body.append("file", file);
+
+    return fetch(UPLOAD_URL, {
+        method: "post",
+        body,
+        mode: "cors",
+        credentials: "include",
+    })
+        .then((res) => res.json())
+        .then((res) => {
+        console.log("Upload response", res);
+        if (res?.code == 0 && res?.data) {
+            return res?.data;
+        }
+        throw Error(`upload Error: ${res?.msg}`);
+        });
+}
+
 export function removeImage(imageUrl: string) {
   return fetch(imageUrl, {
     method: "DELETE",

@@ -43,7 +43,7 @@ interface ChatCommands {
 }
 
 // Compatible with Chinese colon character "："
-export const ChatCommandPrefix = /^[:：]/;
+export const ChatCommandPrefix = /^[@＠]/;
 
 export function useChatCommand(commands: ChatCommands = {}) {
   function extract(userInput: string) {
