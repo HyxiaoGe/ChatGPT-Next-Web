@@ -512,9 +512,9 @@ export function ChatActions(props: {
   const [showModelSelector, setShowModelSelector] = useState(false);
   const [showPluginSelector, setShowPluginSelector] = useState(false);
   const plugins = usePluginStore((state) => state.plugins);
-  const [showUploadImage, setShowUploadFile] = useState(false);
 
   const cloud = YliyunCloud.getInstance();
+  const [showUploadButton, setShowUploadButton] = useState(false);
   const [showCloudUploadButton, setShowCloudUploadButton] = useState(cloud.enabled);
   const [showSizeSelector, setShowSizeSelector] = useState(false);
   const [showQualitySelector, setShowQualitySelector] = useState(false);
@@ -529,16 +529,18 @@ export function ChatActions(props: {
   const currentStyle =
     chatStore.currentSession().mask.modelConfig?.style ?? "vivid";
 
-  const isMobileScreen = useMobileScreen();
-
   useEffect(() => {
+    const currentPlugin = chatStore.currentSession().mask?.plugin?.at(0);
+    console.log(currentPlugin);
+    if (currentPlugin !== 'simple-chat') {
+      setShowUploadButton(true);
+      setShowCloudUploadButton(true);
+    }
     const show = isVisionModel(currentModel);
-    setShowUploadFile(show);
     if (!show) {
       props.setAttachFiles([]);
       props.setUploading(false);
     }
-
     // if current model is not available
     // switch to first available model
     const isUnavailableModel = !models.some((m) => m.name === currentModel);
@@ -616,11 +618,13 @@ export function ChatActions(props: {
         />
       )}
 
+      {showUploadButton && (
       <ChatAction
         onClick={props.localUploadFile}
         text={Locale.Chat.InputActions.LocalUploadFile}
         icon={props.uploading ? <LoadingButtonIcon /> : <UploadIcon />}
       />
+      )}
 
       {showCloudUploadButton && (
         <ChatAction
@@ -1486,6 +1490,8 @@ function _Chat() {
     files.push(...attachFiles);
 
     const providerName = chatStore.currentSession().mask.modelConfig?.providerName
+    const conversationalMode = chatStore.currentSession().mask.plugin?.[0]
+    console.log("conversationalMode: ", conversationalMode)
 
     files.push(
       ...(await new Promise<string[]>((res, rej) => {
@@ -1499,7 +1505,13 @@ function _Chat() {
           for (let i = 0; i < files.length; i++) {
             const file = event.target.files[i];
             if (providerName === 'CHATCHAT') {
-              uploadFileToChatChat(file)
+              let tempCache:boolean = false;
+              if (conversationalMode === 'file-chat') {
+                tempCache = true;
+              } else if (conversationalMode === 'knowledge-chat') {
+                tempCache = false;
+              }
+              uploadFileToChatChat(file, tempCache)
             }
             uploadFileRemote(file)
               .then((dataUrl) => {

@@ -63,8 +63,8 @@ export const DEFAULT_CONFIG = {
   models: DEFAULT_MODELS as any as LLMModel[],
 
   modelConfig: {
-    model: "qwen-turbo" as ModelType,
-    providerName: "Alibaba" as ServiceProvider,
+    model: "qwen1.5-chat" as ModelType,
+    providerName: "CHATCHAT" as ServiceProvider,
     temperature: 0.5,
     top_p: 1,
     top_k: 3,

@@ -12,6 +12,9 @@ import {
 import { prettyObject } from "./format";
 import { fetch as tauriFetch } from "./stream";
 import fileTypesConfig from "../../public/fileTypes.json";
+import { safeLocalStorage } from "@/app/utils";
+
+const storage = safeLocalStorage();
 
 export function compressImage(file: Blob, maxSize: number): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -151,22 +154,30 @@ export function uploadFile(file: File): Promise<string> {
       });
 }
 
-export async function uploadFileToChatChat(file: File): Promise<string> {
+export async function uploadFileToChatChat(file: File, isTempFile: boolean): Promise<void> {
+
+  console.log("uploadFileToChatChat......", file);
+
+  let path:string;
   const formData = new FormData();
-
-  try {
-    formData.append("files", file);
-
+  storage.setItem(file.name, '');
+  formData.append("files", file);
+  formData.append("chunk_size", "750");
+  formData.append("chunk_overlap", "150");
+  formData.append("zh_title_enhance", "false");
+  if (isTempFile) {
+    path = CHATCHAT.UploadTempFilePath;
+  } else {
+    path = CHATCHAT.UploadFilePath;
     formData.append("knowledge_base_name", "samples");
     formData.append("to_vector_store", "true");
     formData.append("override", "false");
     formData.append("not_refresh_vs_cache", "false");
-    formData.append("chunk_size", "750");
-    formData.append("chunk_overlap", "150");
-    formData.append("zh_title_enhance", "false");
     formData.append("docs", "");
+  }
 
-    const response = await fetch(CHATCHAT.UploadFilePath, {
+  try {
+    const response = await fetch(path, {
       method: "POST",
       body: formData,
       headers: {
@@ -179,7 +190,16 @@ export async function uploadFileToChatChat(file: File): Promise<string> {
       throw new Error(`Upload failed with status: ${response.status}`);
     }
 
-    return await response.json();
+    const resJson = await response.json();
+
+    if (isTempFile) {
+      console.log("Upload temp file response", resJson);
+      if (resJson.code === 200) {
+        if (resJson.data && resJson.data.id) {
+          storage.setItem(file.name, resJson.data.id);
+        }
+      }
+    }
   } catch (e) {
     console.error("[Request] Failed to upload documents", e);
     throw e;

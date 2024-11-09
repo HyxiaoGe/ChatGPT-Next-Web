@@ -242,7 +242,11 @@ export const CHATCHAT = {
   ExampleEndpoint: CHATCHAT_BASE_URL,
   ChatPath: "/chat/completions",
   KBChatPath: "/kb_chat",
+  FileChatPath: (tempId: string) => {
+    return `/knowledge_base/temp_kb/${tempId}/chat/completions`;
+  },
   UploadFilePath: "/knowledge_base/upload_docs",
+  UploadTempFilePath: "/knowledge_base/upload_temp_docs",
   FileListPath: "/knowledge_base/list_files",
 };
 

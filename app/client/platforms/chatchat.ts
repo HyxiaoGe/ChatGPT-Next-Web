@@ -16,7 +16,7 @@ import {
 } from "../api";
 import Locale from "../../locales";
 import { getClientConfig } from "@/app/config/client";
-import { getMessageTextContent } from "@/app/utils";
+import { getMessageTextContent, getMessageImages } from "@/app/utils";
 import { fetch } from "@/app/utils/stream";
 import {
   EventStreamContentType,
@@ -77,12 +77,20 @@ export class CHATCHATApi implements LLMApi {
   }
 
   async chat(options: ChatOptions) {
+    let requestPayload: any;
+    let path: string = "";
+
     const history: ChatOptions["messages"] = [];
     let queryText = "";
     for (const v of options.messages) {
       const content = getMessageTextContent(v);
       queryText = content;
       history.push({ role: v.role, content });
+
+      const tempId = getMessageImages(v)[0];
+        if (tempId) {
+            path = this.path(CHATCHAT.FileChatPath(tempId));
+        }
     }
 
     const modelConfig = {
@@ -91,27 +99,47 @@ export class CHATCHATApi implements LLMApi {
       ...{
         model: options.config.model,
         providerName: options.config.providerName,
+        plugin: useChatStore.getState().currentSession().mask.plugin,
       },
-    };
-
-    const requestPayload: RequestPayload = {
-      query: queryText,
-      mode: "local_kb",
-      kb_name: "samples",
-      top_k: modelConfig.top_k,
-      score_threshold: modelConfig.score_threshold,
-      history: [],
-      stream: true,
-      model: modelConfig.model,
-      temperature: modelConfig.temperature,
-      max_tokens: modelConfig.max_tokens,
     };
 
     const shouldStream = !!options.config.stream;
     const controller = new AbortController();
     options.onController?.(controller);
+
+    if (modelConfig.plugin) {
+      console.log("plugin: ", modelConfig.plugin[0]);
+      if (modelConfig.plugin[0] === "simple-chat" || modelConfig.plugin[0] === "file-chat") {
+        if (modelConfig.plugin[0] === "simple-chat") {
+          path = this.path(CHATCHAT.ChatPath);
+        }
+        const messages = options.messages.map((v) => ({
+          role: v.role === "system" ? "user" : v.role,
+          content: getMessageTextContent(v),
+        }));
+        requestPayload = {
+          model: modelConfig.model,
+          messages: messages,
+          temperature: modelConfig.temperature,
+          stream: shouldStream
+        };
+      } else if (modelConfig.plugin[0] === "knowledge-chat") {
+        path = this.path(CHATCHAT.KBChatPath);
+        requestPayload = {
+          query: queryText,
+          mode: "local_kb",
+          kb_name: "samples",
+          top_k: modelConfig.top_k,
+          score_threshold: modelConfig.score_threshold,
+          history: [],
+          stream: true,
+          model: modelConfig.model,
+          temperature: modelConfig.temperature,
+          max_tokens: modelConfig.max_tokens,
+        };
+      }
+    }
     try {
-      const kbChatPath = this.path(CHATCHAT.KBChatPath);
       const chatPayload = {
         method: "POST",
         body: JSON.stringify(requestPayload),
@@ -162,6 +190,7 @@ export class CHATCHATApi implements LLMApi {
 
         const finish = () => {
           if (!finished) {
+            console.log("[Request] finish");
             finished = true;
             options.onFinish(responseText + remainText);
           }
@@ -169,7 +198,7 @@ export class CHATCHATApi implements LLMApi {
 
         controller.signal.onabort = finish;
 
-        fetchEventSource(kbChatPath, {
+        fetchEventSource(path, {
           fetch: fetch as any,
           ...chatPayload,
           async onopen(res) {
@@ -218,10 +247,25 @@ export class CHATCHATApi implements LLMApi {
                 return;
               }
               const json = JSON.parse(text);
-              const delta = json.choices?.at(0)?.delta?.content ?? "";
-              if (delta) {
-                remainText += delta;
-                startAnimation();
+              if (json.choices) {
+                if (json.choices.at(0)?.message?.content) {
+                  const message = json.choices.at(0)?.message?.content ?? "";
+                  if (message) {
+                    remainText += message;
+                    startAnimation();
+                  }
+                } else if (json.choices.at(0)?.delta?.content) {
+                  const delta = json.choices.at(0)?.delta?.content ?? "";
+                  if (delta) {
+                    remainText += delta;
+                    startAnimation();
+                  }
+                } else if (json.choices.at(0)?.finish_reason) {
+                  if (json.choices.at(0)?.finish_reason === "stop") {
+                    console.log("[Request] finish_reason: stop");
+                    finish();
+                  }
+                }
               }
             } catch (e) {
               console.error("[Request] parse error", text, msg);
@@ -237,11 +281,12 @@ export class CHATCHATApi implements LLMApi {
           openWhenHidden: true,
         });
       } else {
-        const res = await fetch(kbChatPath, chatPayload);
+        const res = await fetch(path, chatPayload);
         clearTimeout(requestTimeoutId);
-
         const resJson = await res.json();
+
         const message = this.extractMessage(resJson);
+        console.log("[Request] message ", message);
         options.onFinish(message);
       }
     } catch (e) {

@@ -29,6 +29,8 @@ import { ModelConfig, ModelType, useAppConfig } from "./config";
 import { useAccessStore } from "./access";
 import { collectModelsWithDefaultModel } from "../utils/model";
 import { createEmptyMask, Mask } from "./mask";
+import {isEmpty, reject} from "lodash-es";
+import {resolve} from "node:dns";
 
 const localStorage = safeLocalStorage();
 
@@ -364,23 +366,26 @@ export const useChatStore = createPersistStore(
       async onUserInput(content: string, attachFiles?: string[]) {
         const session = get().currentSession();
         const modelConfig = session.mask.modelConfig;
-
         const plugin = session.mask.plugin;
-        console.log("plugin", plugin);
-
-        console.log("[User Input] before template: ", content, modelConfig);
-
         const userContent = fillTemplateWith(content, modelConfig);
-        console.log("[User Input] after template: ", userContent);
 
         let mContent: string | MultimodalContent[] = userContent;
         const api: ClientApi = getClientApi(modelConfig.providerName);
 
         if (attachFiles && attachFiles.length > 0) {
+          if (modelConfig.providerName === 'CHATCHAT' && plugin?.at(0) === 'file-chat') {
+            for (let i = 0; i < attachFiles.length; i++) {
+              const url = attachFiles[i];
+              const fileName = url.match(/[^/]+$/)?.[0] ?? "";
+              const tempId = await fetchWithTimeout(fileName) as string;
+              attachFiles[i] = tempId ? tempId : url;
+            }
+          }
+
           mContent = [
             ...(userContent
-              ? [{ type: "text" as const, text: userContent }]
-              : []),
+                ? [{ type: "text" as const, text: userContent }]
+                : []),
             ...attachFiles.map((url) => ({
               type: "file_url" as const,
               file_url: { url },
@@ -837,3 +842,32 @@ export const useChatStore = createPersistStore(
     },
   },
 );
+
+async function fetchWithTimeout(fileName: string, timeout = 30000) {
+  return new Promise((resolve, reject) => {
+    const tempId = localStorage.getItem(fileName);
+
+    if (!isEmpty(tempId)) {
+      resolve(tempId);
+      return;
+    }
+
+    const checkInterval = 100;
+    let elapsedTime = 0;
+
+    const intervalId = setInterval(() => {
+      const newTempId = localStorage.getItem(fileName);
+
+      if (!isEmpty(newTempId)) {
+        clearInterval(intervalId);
+        resolve(newTempId);
+      }
+
+      elapsedTime += checkInterval;
+      if (elapsedTime >= timeout) {
+        clearInterval(intervalId);
+        reject(new Error("Timeout: tempId not found"));
+      }
+    }, checkInterval);
+  });
+}

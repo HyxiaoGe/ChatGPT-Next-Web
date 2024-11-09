@@ -114,10 +114,20 @@ if (mode !== "export") {
         basePath: false,
       },
       {
-        source: '/knowledge_base/upload_docs',  // 固定匹配这个路径
+        source: '/knowledge_base/upload_docs',
         destination: 'http://127.0.0.1:7861/knowledge_base/upload_docs',
         basePath: false,
-      }
+      },
+      {
+        source: '/knowledge_base/upload_temp_docs/:path*',
+        destination: 'http://127.0.0.1:7861/knowledge_base/upload_temp_docs/:path*',
+        basePath: false,
+      },
+      {
+        source: '/knowledge_base/temp_kb/:path*',
+        destination: 'http://127.0.0.1:7861/knowledge_base/temp_kb/:path*',
+        basePath: false,
+      },
     ];
     
     return {
