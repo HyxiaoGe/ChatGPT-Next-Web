@@ -122,6 +122,11 @@ if (mode !== "export") {
         basePath: false,
       },
       {
+        source: '/knowledge_base/list_knowledge_bases',
+        destination: 'http://127.0.0.1:7861/knowledge_base/list_knowledge_bases',
+        basePath: false,
+      },
+      {
         source: '/knowledge_base/upload_docs',
         destination: 'http://127.0.0.1:7861/knowledge_base/upload_docs',
         basePath: false,

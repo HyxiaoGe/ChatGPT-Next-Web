@@ -247,6 +247,7 @@ export const CHATCHAT = {
   },
   UploadFilePath: "/knowledge_base/upload_docs",
   UploadTempFilePath: "/knowledge_base/upload_temp_docs",
+  KnowledgeBaseListPath: "/knowledge_base/list_knowledge_bases",
   FileListPath: "/knowledge_base/list_files",
 };
 

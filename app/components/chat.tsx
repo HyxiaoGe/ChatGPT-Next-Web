@@ -34,6 +34,7 @@ import ConfirmIcon from "../icons/confirm.svg";
 import CloseIcon from "../icons/close.svg";
 import CancelIcon from "../icons/cancel.svg";
 import CloudIcon from "../icons/cloud-success.svg";
+import KnowledgeBaseIcon from "../icons/brain.svg";
 import UploadIcon from "../icons/upload.svg";
 
 import LightIcon from "../icons/light.svg";
@@ -119,6 +120,7 @@ import { MsEdgeTTS, OUTPUT_FORMAT } from "../utils/ms_edge_tts";
 import { isEmpty } from "lodash-es";
 import {YliyunCloud} from "@/app/config/cloud";
 import {CloudBaseCache} from "@/app/store/cloudfiles";
+import {KnowledgeBaseCache} from "@/app/store/knowledgebase";
 
 const localStorage = safeLocalStorage();
 
@@ -456,6 +458,7 @@ export function ChatActions(props: {
   showPromptModal: () => void;
   scrollToBottom: () => void;
   showPromptHints: () => void;
+  knowledgeBase: () => void;
   hitBottom: boolean;
   uploading: boolean;
   setShowShortcutKeyModal: React.Dispatch<React.SetStateAction<boolean>>;
@@ -515,6 +518,8 @@ export function ChatActions(props: {
 
   const [showUploadButton, setShowUploadButton] = useState(false);
   const [showCloudUploadButton, setShowCloudUploadButton] = useState(false);
+  const [showKnowledgeBaseSelector, setShowKnowledgeBaseSelector] = useState(false);
+  const [showKnowledgeBaseButton, setShowKnowledgeBaseButton] = useState(false);
   const [showSizeSelector, setShowSizeSelector] = useState(false);
   const [showQualitySelector, setShowQualitySelector] = useState(false);
   const [showStyleSelector, setShowStyleSelector] = useState(false);
@@ -532,13 +537,20 @@ export function ChatActions(props: {
     const currentPlugin = chatStore.currentSession().mask?.plugin?.at(0);
     if (currentPlugin !== 'simple-chat') {
       setShowUploadButton(true);
-      const cloud = YliyunCloud.getInstance();
-      if (cloud.enabled) {
-        setShowCloudUploadButton(true);
+      if (currentPlugin === 'file-chat') {
+        setShowKnowledgeBaseButton(false);
       }
+      if (currentPlugin === 'knowledge-chat') {
+        setShowKnowledgeBaseButton(true);
+      }
+      // const cloud = YliyunCloud.getInstance();
+      // if (cloud.enabled) {
+      //   setShowCloudUploadButton(true);
+      // }
     } else {
         setShowUploadButton(false);
-        setShowCloudUploadButton(false);
+        setShowKnowledgeBaseButton(false);
+        // setShowCloudUploadButton(false);
     }
     const show = isVisionModel(currentModel);
     if (!show) {
@@ -620,6 +632,14 @@ export function ChatActions(props: {
             });
           }}
         />
+      )}
+
+      {( showKnowledgeBaseButton &&
+          <ChatAction
+              onClick={props.knowledgeBase}
+              text={Locale.Chat.InputActions.KnowledgeBase}
+              icon={props.uploading ? <LoadingButtonIcon /> : <KnowledgeBaseIcon />}
+          />
       )}
 
       {showUploadButton && (
@@ -1042,7 +1062,6 @@ function _Chat() {
   };
 
   const doSubmit = (userInput: string) => {
-    console.log("userInput: ", userInput)
     if (userInput.trim() === "" && isEmpty(attachFiles)) return;
     const matchCommand = chatCommands.match(userInput);
     if (matchCommand.matched) {
@@ -1056,9 +1075,7 @@ function _Chat() {
       .onUserInput(userInput, attachFiles)
       .then(() => setIsLoading(false));
     setAttachFiles([]);
-    console.log("1111111111")
     chatStore.setLastInput(userInput);
-    console.log("2222222222")
     setUserInput("");
     setPromptHints([]);
     if (!isMobileScreen) inputRef.current?.focus();
@@ -1555,7 +1572,6 @@ function _Chat() {
   }
 
   async function uploadCloudFile() {
-    console.log("uploadCloudFile.......................................");
     const cloud = YliyunCloud.getInstance();
     const fileNameWithPath = userInput.split(':')[0];
     const fileName = fileNameWithPath.split('/').pop();
@@ -1568,6 +1584,11 @@ function _Chat() {
         safeLocalStorage().removeItem(fileNameWithPath)
       }
     }
+  }
+
+  async function knowledgeBase() {
+    const knowledge = await KnowledgeBaseCache.fetch()
+    console.log(knowledge)
   }
 
   // 快捷键 shortcut keys
@@ -1965,6 +1986,7 @@ function _Chat() {
         <ChatActions
           uploadLocalFile={uploadLocalFile}
           uploadCloudFile={uploadCloudFile}
+          knowledgeBase={knowledgeBase}
           setAttachFiles={setAttachFiles}
           setUploading={setUploading}
           showPromptModal={() => setShowPromptModal(true)}
