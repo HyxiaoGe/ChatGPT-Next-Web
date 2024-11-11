@@ -105,6 +105,14 @@ if (mode !== "export") {
         destination: 'http://192.168.250.217/apps/files/:path*'
       },
       {
+        source: '/api/file/:path*',
+        destination: 'http://192.168.250.217/apps/file/:path*'
+      },
+      {
+        source: '/api/content/:path*',
+        destination: 'http://192.168.250.217/:path*'
+      },
+      {
         source: "/chat/:path*",
         destination: 'http://127.0.0.1:7861/chat/chat/:path*',
       },

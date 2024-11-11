@@ -449,8 +449,8 @@ function useScrollToBottom(
 }
 
 export function ChatActions(props: {
-  localUploadFile: () => void;
-  cloudUploadFile: () => void;
+  uploadLocalFile: () => void;
+  uploadCloudFile: () => void;
   setAttachFiles: (images: string[]) => void;
   setUploading: (uploading: boolean) => void;
   showPromptModal: () => void;
@@ -513,9 +513,8 @@ export function ChatActions(props: {
   const [showPluginSelector, setShowPluginSelector] = useState(false);
   const plugins = usePluginStore((state) => state.plugins);
 
-  const cloud = YliyunCloud.getInstance();
   const [showUploadButton, setShowUploadButton] = useState(false);
-  const [showCloudUploadButton, setShowCloudUploadButton] = useState(cloud.enabled);
+  const [showCloudUploadButton, setShowCloudUploadButton] = useState(false);
   const [showSizeSelector, setShowSizeSelector] = useState(false);
   const [showQualitySelector, setShowQualitySelector] = useState(false);
   const [showStyleSelector, setShowStyleSelector] = useState(false);
@@ -531,10 +530,15 @@ export function ChatActions(props: {
 
   useEffect(() => {
     const currentPlugin = chatStore.currentSession().mask?.plugin?.at(0);
-    console.log(currentPlugin);
     if (currentPlugin !== 'simple-chat') {
       setShowUploadButton(true);
-      setShowCloudUploadButton(true);
+      const cloud = YliyunCloud.getInstance();
+      if (cloud.enabled) {
+        setShowCloudUploadButton(true);
+      }
+    } else {
+        setShowUploadButton(false);
+        setShowCloudUploadButton(false);
     }
     const show = isVisionModel(currentModel);
     if (!show) {
@@ -620,19 +624,19 @@ export function ChatActions(props: {
 
       {showUploadButton && (
       <ChatAction
-        onClick={props.localUploadFile}
-        text={Locale.Chat.InputActions.LocalUploadFile}
+        onClick={props.uploadLocalFile}
+        text={Locale.Chat.InputActions.UploadLocalFile}
         icon={props.uploading ? <LoadingButtonIcon /> : <UploadIcon />}
       />
       )}
 
-      {showCloudUploadButton && (
-        <ChatAction
-          onClick={props.cloudUploadFile}
-          text={Locale.Chat.InputActions.CloudUploadFile}
-          icon={props.uploading ? <LoadingButtonIcon /> : <CloudIcon />}
-        />
-      )}
+      {/*{showCloudUploadButton && (*/}
+      {/*  <ChatAction*/}
+      {/*    onClick={props.uploadCloudFile}*/}
+      {/*    text={Locale.Chat.InputActions.UploadCloudFile}*/}
+      {/*    icon={props.uploading ? <LoadingButtonIcon /> : <CloudIcon />}*/}
+      {/*  />*/}
+      {/*)}*/}
 
       <ChatAction
         onClick={nextTheme}
@@ -1023,10 +1027,11 @@ function _Chat() {
     if (n === 0) {
       setPromptHints([]);
     } else if (text.match(ChatCommandPrefix)) {
-      const commands = CloudBaseCache.searchCommands(text);
-      // chatCommands.search(text);
-
-      setPromptHints(await commands);
+      const currentPlugin = chatStore.currentSession().mask?.plugin?.at(0);
+      if (currentPlugin !== 'simple-chat') {
+        const commands = await CloudBaseCache.searchCommands(text);
+        setPromptHints(commands);
+      }
     } else if (!config.disablePromptHint && n < SEARCH_TEXT_LIMIT) {
       // check if need to trigger auto completion
       if (text.startsWith("/")) {
@@ -1037,6 +1042,7 @@ function _Chat() {
   };
 
   const doSubmit = (userInput: string) => {
+    console.log("userInput: ", userInput)
     if (userInput.trim() === "" && isEmpty(attachFiles)) return;
     const matchCommand = chatCommands.match(userInput);
     if (matchCommand.matched) {
@@ -1050,7 +1056,9 @@ function _Chat() {
       .onUserInput(userInput, attachFiles)
       .then(() => setIsLoading(false));
     setAttachFiles([]);
+    console.log("1111111111")
     chatStore.setLastInput(userInput);
+    console.log("2222222222")
     setUserInput("");
     setPromptHints([]);
     if (!isMobileScreen) inputRef.current?.focus();
@@ -1067,12 +1075,18 @@ function _Chat() {
         matchedChatCommand.invoke();
         setUserInput("");
       } else {
-        // or fill the prompt
-        setUserInput(prompt.title + ": ");
+        // or fill the prompt 666666666666666666666666666666666666666666666666666666666666666
+        setUserInput(prompt.content + prompt.title + ": ");
       }
       inputRef.current?.focus();
     }, 30);
   };
+
+  useEffect(() => {
+    if(userInput) {
+      uploadCloudFile();
+    }
+  }, [userInput]);
 
   // stop response
   const onUserStop = (messageId: string) => {
@@ -1288,7 +1302,7 @@ function _Chat() {
               {
                 ...createMessage({
                   role: "assistant",
-                  content: "……",
+                  content: "思考中……",
                 }),
                 preview: true,
               },
@@ -1485,13 +1499,12 @@ function _Chat() {
     [attachFiles, chatStore],
   );
 
-  async function localUploadFile() {
+  async function uploadLocalFile() {
     const files: string[] = [];
     files.push(...attachFiles);
 
     const providerName = chatStore.currentSession().mask.modelConfig?.providerName
     const conversationalMode = chatStore.currentSession().mask.plugin?.[0]
-    console.log("conversationalMode: ", conversationalMode)
 
     files.push(
       ...(await new Promise<string[]>((res, rej) => {
@@ -1541,9 +1554,20 @@ function _Chat() {
     setAttachFiles(files);
   }
 
-  async function cloudUploadFile() {
+  async function uploadCloudFile() {
+    console.log("uploadCloudFile.......................................");
     const cloud = YliyunCloud.getInstance();
-    console.log("cloudUploadFile");
+    const fileNameWithPath = userInput.split(':')[0];
+    const fileName = fileNameWithPath.split('/').pop();
+    safeLocalStorage().setItem(fileName as string, '')
+    if (fileNameWithPath && fileNameWithPath !== '@') {
+      const fileIdWithVersion = safeLocalStorage().getItem(fileNameWithPath)
+      const fileInfo = fileIdWithVersion?.split(":") as string[];
+      if (fileInfo) {
+        CloudBaseCache.fetchDownloadFileUrl(fileInfo[0], fileInfo[1])
+        safeLocalStorage().removeItem(fileNameWithPath)
+      }
+    }
   }
 
   // 快捷键 shortcut keys
@@ -1939,8 +1963,8 @@ function _Chat() {
         <PromptHints prompts={promptHints} onPromptSelect={onPromptSelect} />
 
         <ChatActions
-          localUploadFile={localUploadFile}
-          cloudUploadFile={cloudUploadFile}
+          uploadLocalFile={uploadLocalFile}
+          uploadCloudFile={uploadCloudFile}
           setAttachFiles={setAttachFiles}
           setUploading={setUploading}
           showPromptModal={() => setShowPromptModal(true)}

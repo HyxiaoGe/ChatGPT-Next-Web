@@ -1,7 +1,7 @@
 import {
   CACHE_URL_PREFIX,
   UPLOAD_URL,
-  REQUEST_TIMEOUT_MS, CHATCHAT_BASE_URL, CHATCHAT,
+  REQUEST_TIMEOUT_MS, CHATCHAT,
 } from "@/app/constant";
 import { RequestMessage } from "@/app/client/api";
 import Locale from "@/app/locales";
@@ -146,7 +146,6 @@ export function uploadFile(file: File): Promise<string> {
   })
       .then((res) => res.json())
       .then((res) => {
-        console.log("Upload response", res);
         if (res?.code == 0 && res?.data) {
           return res?.data;
         }
@@ -155,9 +154,6 @@ export function uploadFile(file: File): Promise<string> {
 }
 
 export async function uploadFileToChatChat(file: File, isTempFile: boolean): Promise<void> {
-
-  console.log("uploadFileToChatChat......", file);
-
   let path:string;
   const formData = new FormData();
   storage.setItem(file.name, '');
@@ -193,7 +189,6 @@ export async function uploadFileToChatChat(file: File, isTempFile: boolean): Pro
     const resJson = await response.json();
 
     if (isTempFile) {
-      console.log("Upload temp file response", resJson);
       if (resJson.code === 200) {
         if (resJson.data && resJson.data.id) {
           storage.setItem(file.name, resJson.data.id);
@@ -204,26 +199,6 @@ export async function uploadFileToChatChat(file: File, isTempFile: boolean): Pro
     console.error("[Request] Failed to upload documents", e);
     throw e;
   }
-}
-
-export function uploadCloudFile(file: File): Promise<string> {
-    const body = new FormData();
-    body.append("file", file);
-
-    return fetch(UPLOAD_URL, {
-        method: "post",
-        body,
-        mode: "cors",
-        credentials: "include",
-    })
-        .then((res) => res.json())
-        .then((res) => {
-        console.log("Upload response", res);
-        if (res?.code == 0 && res?.data) {
-            return res?.data;
-        }
-        throw Error(`upload Error: ${res?.msg}`);
-        });
 }
 
 export function removeImage(imageUrl: string) {
@@ -383,7 +358,6 @@ export function stream(
       async onopen(res) {
         clearTimeout(requestTimeoutId);
         const contentType = res.headers.get("content-type");
-        console.log("[Request] response content type: ", contentType);
 
         if (contentType?.startsWith("text/plain")) {
           responseText = await res.clone().text();

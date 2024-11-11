@@ -30,7 +30,6 @@ import { useAccessStore } from "./access";
 import { collectModelsWithDefaultModel } from "../utils/model";
 import { createEmptyMask, Mask } from "./mask";
 import {isEmpty, reject} from "lodash-es";
-import {resolve} from "node:dns";
 
 const localStorage = safeLocalStorage();
 
@@ -364,6 +363,8 @@ export const useChatStore = createPersistStore(
       },
 
       async onUserInput(content: string, attachFiles?: string[]) {
+        console.log("attachFiles: ", attachFiles)
+        console.log("[Chat] User Input: ", content);
         const session = get().currentSession();
         const modelConfig = session.mask.modelConfig;
         const plugin = session.mask.plugin;
@@ -372,11 +373,22 @@ export const useChatStore = createPersistStore(
         let mContent: string | MultimodalContent[] = userContent;
         const api: ClientApi = getClientApi(modelConfig.providerName);
 
+        if (modelConfig.providerName === 'CHATCHAT' && plugin?.at(0) === 'file-chat') {
+          console.log("I'm coming!!!")
+          const fileContent = content.split(':')[0];
+          const regex = /^\/[\u4e00-\u9fa5a-zA-Z0-9_]+(?:\/[\u4e00-\u9fa5a-zA-Z0-9_()（）]+)*\.[a-zA-Z0-9]+$/;
+          if (regex.test(fileContent)) {
+            console.log("I'm coming again!!!")
+            attachFiles?.unshift(fileContent);
+            console.log("attachFiles: ", attachFiles)
+          }
+        }
         if (attachFiles && attachFiles.length > 0) {
           if (modelConfig.providerName === 'CHATCHAT' && plugin?.at(0) === 'file-chat') {
             for (let i = 0; i < attachFiles.length; i++) {
               const url = attachFiles[i];
               const fileName = url.match(/[^/]+$/)?.[0] ?? "";
+              console.log("fileName: ", fileName)
               const tempId = await fetchWithTimeout(fileName) as string;
               attachFiles[i] = tempId ? tempId : url;
             }
