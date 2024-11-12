@@ -182,8 +182,7 @@ function Screen() {
         <SideBar className={isHome ? styles["sidebar-show"] : ""} />
         <WindowContent>
           <Routes>
-            <Route path={Path.Home} element={<Chat />} />
-            <Route path={Path.NewChat} element={<NewChat />} />
+            <Route path={Path.Home} element={<Chat />} />+
             <Route path={Path.Masks} element={<MaskPage />} />
             <Route path={Path.Plugins} element={<PluginPage />} />
             <Route path={Path.SearchChat} element={<SearchChat />} />
@@ -224,6 +223,23 @@ export function Home() {
   useSwitchTheme();
   useLoadData();
   useHtmlLang();
+
+  const accessStore = useAccessStore();
+
+  useEffect(() => {
+     const urlParams = new URLSearchParams(window.location.search);
+
+     const urlValue = urlParams.get('fileUri');
+     const fileNameValue = urlParams.get('fileName');
+     if (urlValue && fileNameValue) {
+       console.log('Received URL:', urlValue);
+       console.log('Received fileName:', fileNameValue);
+       accessStore.update((state) => {
+         state.fileUri = urlValue;
+         state.fileName = fileNameValue as string;
+       })
+     }
+  }, []);
 
   useEffect(() => {
     console.log("[Config] got config from build time", getClientConfig());

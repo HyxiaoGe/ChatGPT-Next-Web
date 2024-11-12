@@ -129,6 +129,9 @@ chatchatUrl: DEFAULT_CHATCHAT_URL,
   customModels: "",
   defaultModel: "",
 
+  fileName: "",
+  fileUri: "",
+
   // tts config
   edgeTTSVoiceName: "zh-CN-YunxiNeural",
 };

@@ -1111,6 +1111,15 @@ function _Chat() {
     },
   );
 
+  const accessStore = useAccessStore();
+  const fileUri = accessStore.fileUri
+  const fileName = accessStore.fileName
+  useEffect(() => {
+    if (fileUri && fileName) {
+      uploadCloudFileByUrl(fileUri, fileName)
+    }
+  }, [fileUri, fileName]);
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(measure, [userInput]);
 
@@ -1338,7 +1347,7 @@ function _Chat() {
     });
   };
 
-  const accessStore = useAccessStore();
+  // const accessStore = useAccessStore();
   const [speechStatus, setSpeechStatus] = useState(false);
   const [speechLoading, setSpeechLoading] = useState(false);
 
@@ -1675,6 +1684,13 @@ function _Chat() {
         safeLocalStorage().removeItem(fileNameWithPath)
       }
     }
+  }
+
+  async function uploadCloudFileByUrl(fileName: string, url: string) {
+    console.log('uploadCloudFileByUrl', fileName, url)
+    // safeLocalStorage().setItem(fileName as string, '')
+
+    // CloudBaseCache.downloadFile(url, fileName)
   }
 
   async function fetchKnowledgeBases() {
