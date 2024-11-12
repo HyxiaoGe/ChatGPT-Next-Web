@@ -76,7 +76,7 @@ const id: PartialLocaleType = {
       Masks: "Semua Masker",
       Clear: "Hapus Obrolan",
       Settings: "Pengaturan Obrolan",
-      UploadFile: "Unggah Gambar",
+      UploadLocalFile: "Unggah Gambar",
     },
     Rename: "Ganti Nama Obrolan",
     Typing: "Sedang Mengetik…",

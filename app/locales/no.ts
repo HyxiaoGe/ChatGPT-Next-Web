@@ -78,7 +78,7 @@ const no: PartialLocaleType = {
       Masks: "Alle masker",
       Clear: "Rydd samtale",
       Settings: "Samtaleinnstillinger",
-      UploadFile: "Last opp bilde",
+      UploadLocalFile: "Last opp bilde",
     },
     Rename: "Gi nytt navn til samtale",
     Typing: "Skriver…",

@@ -76,7 +76,7 @@ const tw = {
       Masks: "所有角色範本",
       Clear: "清除聊天",
       Settings: "對話設定",
-      UploadFile: "上傳圖片",
+      UploadLocalFile: "上傳圖片",
     },
     Rename: "重新命名對話",
     Typing: "正在輸入…",

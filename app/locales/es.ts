@@ -78,7 +78,7 @@ const es: PartialLocaleType = {
       Masks: "Todas las máscaras",
       Clear: "Limpiar chat",
       Settings: "Configuración de conversación",
-      UploadFile: "Subir imagen",
+      UploadLocalFile: "Subir imagen",
     },
     Rename: "Renombrar conversación",
     Typing: "Escribiendo…",

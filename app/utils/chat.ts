@@ -153,7 +153,7 @@ export function uploadFile(file: File): Promise<string> {
       });
 }
 
-export async function uploadFileToChatChat(file: File, isTempFile: boolean): Promise<void> {
+export async function uploadFileToChatChat(file: File, isTempFile: boolean, knowledge_base_name?: string): Promise<void> {
   let path:string;
   const formData = new FormData();
   storage.setItem(file.name, '');
@@ -165,7 +165,7 @@ export async function uploadFileToChatChat(file: File, isTempFile: boolean): Pro
     path = CHATCHAT.UploadTempFilePath;
   } else {
     path = CHATCHAT.UploadFilePath;
-    formData.append("knowledge_base_name", "samples");
+    formData.append("knowledge_base_name", knowledge_base_name!!);
     formData.append("to_vector_store", "true");
     formData.append("override", "false");
     formData.append("not_refresh_vs_cache", "false");

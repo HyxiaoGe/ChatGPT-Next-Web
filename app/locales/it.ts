@@ -77,7 +77,7 @@ const it: PartialLocaleType = {
       Masks: "Tutte le maschere",
       Clear: "Pulisci chat",
       Settings: "Impostazioni conversazione",
-      UploadFile: "Carica immagine",
+      UploadLocalFile: "Carica immagine",
     },
     Rename: "Rinomina conversazione",
     Typing: "Digitazione in corso…",

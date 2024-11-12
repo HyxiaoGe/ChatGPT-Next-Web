@@ -76,7 +76,7 @@ const ru: PartialLocaleType = {
       Masks: "Все маски",
       Clear: "Очистить чат",
       Settings: "Настройки чата",
-      UploadFile: "Загрузить изображение",
+      UploadLocalFile: "Загрузить изображение",
     },
     Rename: "Переименовать чат",
     Typing: "Печатает…",

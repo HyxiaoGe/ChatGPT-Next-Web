@@ -76,7 +76,7 @@ const vi: PartialLocaleType = {
       Masks: "Tất cả mặt nạ",
       Clear: "Xóa cuộc trò chuyện",
       Settings: "Cài đặt trò chuyện",
-      UploadFile: "Tải lên hình ảnh",
+      UploadLocalFile: "Tải lên hình ảnh",
     },
     Rename: "Đổi tên cuộc trò chuyện",
     Typing: "Đang nhập…",

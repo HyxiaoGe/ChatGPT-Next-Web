@@ -76,7 +76,7 @@ const bn: PartialLocaleType = {
       Masks: "সমস্ত মাস্ক",
       Clear: "চ্যাট পরিষ্কার করুন",
       Settings: "চ্যাট সেটিংস",
-      UploadFile: "চিত্র আপলোড করুন",
+      UploadLocalFile: "চিত্র আপলোড করুন",
     },
     Rename: "চ্যাট নাম পরিবর্তন করুন",
     Typing: "লিখছে…",
