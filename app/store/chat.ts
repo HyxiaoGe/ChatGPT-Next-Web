@@ -854,7 +854,7 @@ export const useChatStore = createPersistStore(
   },
 );
 
-async function fetchWithTimeout(fileName: string, timeout = 30000) {
+async function fetchWithTimeout(fileName: string, timeout = 300000) {
   return new Promise((resolve, reject) => {
     const tempId = localStorage.getItem(fileName);
 

@@ -1635,13 +1635,15 @@ function _Chat() {
           for (let i = 0; i < files.length; i++) {
             const file = event.target.files[i];
             if (providerName === 'CHATCHAT') {
+              let knowledgeBase = ''
               let tempCache:boolean = false;
               if (conversationalMode === 'file-chat') {
                 tempCache = true;
               } else if (conversationalMode === 'knowledge-chat') {
+                knowledgeBase = session.mask.modelConfig.knowledgeBase
                 tempCache = false;
               }
-              uploadFileToChatChat(file, tempCache)
+              uploadFileToChatChat(file, tempCache, knowledgeBase)
             }
             uploadFileRemote(file)
               .then((dataUrl) => {

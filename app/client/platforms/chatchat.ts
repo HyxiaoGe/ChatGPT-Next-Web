@@ -77,7 +77,6 @@ export class CHATCHATApi implements LLMApi {
   }
 
   async chat(options: ChatOptions) {
-    debugger
     let requestPayload: any;
     let path: string = "";
 
