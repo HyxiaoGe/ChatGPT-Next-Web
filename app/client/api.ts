@@ -53,6 +53,7 @@ export interface LLMConfig {
   model: string;
   providerName?: string;
   plugin?: string;
+  knowledgeBase?: string;
   temperature?: number;
   top_p?: number;
   stream?: boolean;

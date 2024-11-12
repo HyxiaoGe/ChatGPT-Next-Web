@@ -348,6 +348,71 @@ export function PromptHints(props: {
   );
 }
 
+export function KnowledgeBaseSelector(props: {
+  knowledgeBases: { title: string, content: string }[];
+  onKnowledgeBaseSelect: (knowledgeBase: { title: string, content: string }) => void;
+}) {
+  const [ selectIndex, setSelectIndex ] = useState(0);
+  const selectedRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setSelectIndex(0);
+  }, [props.knowledgeBases.length]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey || e.altKey || e.ctrlKey) {
+        return;
+      }
+
+      const changeIndex = (delta: number) => {
+        e.stopPropagation();
+        e.preventDefault();
+        const nextIndex = Math.max(0, Math.min(props.knowledgeBases.length - 1, selectIndex + delta),);
+        setSelectIndex(nextIndex);
+        selectedRef.current?.scrollIntoView({ block: "center" });
+      };
+
+      if (e.key === 'ArrayUp') {
+        changeIndex(1);
+      } else if (e.key === 'ArrayDown') {
+        changeIndex(-1);
+      } else if (e.key === 'Enter') {
+        const selectedKnowledgeBase = props.knowledgeBases.at(selectIndex);
+        if (selectedKnowledgeBase) {
+          props.onKnowledgeBaseSelect(selectedKnowledgeBase);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [props.knowledgeBases.length, selectIndex]);
+
+  if (props.knowledgeBases.length === 0) return null;
+
+  return (
+      <div className={styles["prompt-hints"]}>
+        {props.knowledgeBases.map((kb, i) => (
+            <div
+                ref={i === selectIndex ? selectedRef : null}
+                className={
+                    styles["prompt-hint"] +
+                    ` ${i === selectIndex ? styles["prompt-hint-selected"] : ""}`
+                }
+                key={kb.title + i.toString()}
+                onClick={() => props.onKnowledgeBaseSelect(kb)}
+                onMouseEnter={() => setSelectIndex(i)}
+            >
+              <div className={styles["hint-title"]}>{kb.title}</div>
+              <div className={styles["hint-content"]}>{kb.content}</div>
+            </div>
+        ))}
+      </div>
+  );
+}
+
 function ClearContextDivider() {
   const chatStore = useChatStore();
 
@@ -519,6 +584,7 @@ export function ChatActions(props: {
   const [showUploadButton, setShowUploadButton] = useState(false);
   const [showCloudUploadButton, setShowCloudUploadButton] = useState(false);
   const [showKnowledgeBaseSelector, setShowKnowledgeBaseSelector] = useState(false);
+  const [knowledgeBases, setKnowledgeBases] = useState<{ title: string, content: string }[]>([]);
   const [showKnowledgeBaseButton, setShowKnowledgeBaseButton] = useState(false);
   const [showSizeSelector, setShowSizeSelector] = useState(false);
   const [showQualitySelector, setShowQualitySelector] = useState(false);
@@ -532,6 +598,25 @@ export function ChatActions(props: {
     chatStore.currentSession().mask.modelConfig?.quality ?? "standard";
   const currentStyle =
     chatStore.currentSession().mask.modelConfig?.style ?? "vivid";
+
+  useEffect(() => {
+    const fetchKnowledgeBases = async () => {
+        try {
+            const response = await KnowledgeBaseCache.fetch();
+            setKnowledgeBases(response.data.map(kb => ({ title: kb.kb_name, content: kb.kb_info })));
+        } catch (error) {
+            console.error("Failed to fetch knowledge base list:", error);
+        }
+    }
+    fetchKnowledgeBases();
+  }, []);
+
+  const handleKnowledgeBaseSelect = (kb: { title: string, content: string }) => {
+    chatStore.updateCurrentSession((session) => {
+      session.mask.modelConfig.knowledgeBase = kb.title;
+    });
+    setShowKnowledgeBaseSelector(false);
+  }
 
   useEffect(() => {
     const currentPlugin = chatStore.currentSession().mask?.plugin?.at(0);
@@ -634,13 +719,19 @@ export function ChatActions(props: {
         />
       )}
 
-      {( showKnowledgeBaseButton &&
+      {( showKnowledgeBaseButton && (
           <ChatAction
-              onClick={props.knowledgeBase}
-              text={Locale.Chat.InputActions.KnowledgeBase}
-              icon={props.uploading ? <LoadingButtonIcon /> : <KnowledgeBaseIcon />}
+            onClick={() => setShowKnowledgeBaseSelector(!showKnowledgeBaseSelector)}
+            text={Locale.Chat.InputActions.KnowledgeBase}
+            icon={props.uploading ? <LoadingButtonIcon /> : <KnowledgeBaseIcon />}
           />
-      )}
+        ))}
+      {showKnowledgeBaseSelector && (
+          <KnowledgeBaseSelector
+              knowledgeBases={knowledgeBases}
+              onKnowledgeBaseSelect={handleKnowledgeBaseSelect}
+          />
+        )}
 
       {showUploadButton && (
       <ChatAction
@@ -1586,9 +1677,12 @@ function _Chat() {
     }
   }
 
-  async function knowledgeBase() {
-    const knowledge = await KnowledgeBaseCache.fetch()
-    console.log(knowledge)
+  async function fetchKnowledgeBases() {
+    const knowledge = await KnowledgeBaseCache.fetch();
+    return knowledge.data.map((item) => ({
+      title: item.kb_name,
+      content: item.kb_info,
+    }));
   }
 
   // 快捷键 shortcut keys
@@ -1986,7 +2080,7 @@ function _Chat() {
         <ChatActions
           uploadLocalFile={uploadLocalFile}
           uploadCloudFile={uploadCloudFile}
-          knowledgeBase={knowledgeBase}
+          knowledgeBase={fetchKnowledgeBases}
           setAttachFiles={setAttachFiles}
           setUploading={setUploading}
           showPromptModal={() => setShowPromptModal(true)}
@@ -2043,6 +2137,7 @@ function _Chat() {
                     className={`${styles["attach-image"]} ${
                       !isImage ? styles["attach-file"] : ""
                     }`}
+
                     style={isImage ? { backgroundImage: `url("${file}")` } : {}}
                   >
                     {!isImage && (

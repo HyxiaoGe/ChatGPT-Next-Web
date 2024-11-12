@@ -50,6 +50,8 @@ export const DEFAULT_CONFIG = {
   enableAutoGenerateTitle: true,
   sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
 
+  knowledgeBase: "",
+
   enableArtifacts: true, // show artifacts config
 
   enableCodeFold: true, // code fold config
@@ -77,6 +79,7 @@ export const DEFAULT_CONFIG = {
     compressMessageLengthThreshold: 1000,
     compressModel: "",
     plugin: "",
+    knowledgeBase: "",
     compressProviderName: "",
     enableInjectSystemPrompts: true,
     template: config?.template ?? DEFAULT_INPUT_TEMPLATE,

@@ -363,7 +363,6 @@ export const useChatStore = createPersistStore(
       },
 
       async onUserInput(content: string, attachFiles?: string[]) {
-        console.log("attachFiles: ", attachFiles)
         console.log("[Chat] User Input: ", content);
         const session = get().currentSession();
         const modelConfig = session.mask.modelConfig;

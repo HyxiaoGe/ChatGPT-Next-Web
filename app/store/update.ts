@@ -7,7 +7,7 @@ import {
 import { getClientConfig } from "../config/client";
 import { createPersistStore } from "../utils/store";
 import { clientUpdate } from "../utils";
-import ChatGptIcon from "../icons/chatgpt.png";
+import ChatGptIcon from "../icons/logo.png";
 import Locale from "../locales";
 import { ClientApi } from "../client/api";
 

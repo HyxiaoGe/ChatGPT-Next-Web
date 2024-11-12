@@ -77,6 +77,7 @@ export class CHATCHATApi implements LLMApi {
   }
 
   async chat(options: ChatOptions) {
+    debugger
     let requestPayload: any;
     let path: string = "";
 
@@ -99,6 +100,7 @@ export class CHATCHATApi implements LLMApi {
       ...{
         model: options.config.model,
         providerName: options.config.providerName,
+        knowledgeBase: options.config.knowledgeBase,
         plugin: useChatStore.getState().currentSession().mask.plugin,
       },
     };
@@ -108,7 +110,6 @@ export class CHATCHATApi implements LLMApi {
     options.onController?.(controller);
 
     if (modelConfig.plugin) {
-      console.log("plugin: ", modelConfig.plugin[0]);
       if (modelConfig.plugin[0] === "simple-chat" || modelConfig.plugin[0] === "file-chat") {
         if (modelConfig.plugin[0] === "simple-chat") {
           path = this.path(CHATCHAT.ChatPath);
@@ -128,7 +129,7 @@ export class CHATCHATApi implements LLMApi {
         requestPayload = {
           query: queryText,
           mode: "local_kb",
-          kb_name: "samples",
+          kb_name: modelConfig.knowledgeBase,
           top_k: modelConfig.top_k,
           score_threshold: modelConfig.score_threshold,
           history: [],
