@@ -162,7 +162,7 @@ export async function uploadFileToChatChat(file: File, isTempFile: boolean, know
   console.log("11111111111111111111111111111111")
   let path:string;
   const formData = new FormData();
-  // storage.setItem(file.name, '');
+  storage.setItem(file.name, '');
   formData.append("files", file);
   formData.append("chunk_size", "750");
   formData.append("chunk_overlap", "150");
@@ -200,8 +200,6 @@ export async function uploadFileToChatChat(file: File, isTempFile: boolean, know
       if (resJson.code === 200) {
         if (resJson.data && resJson.data.id) {
           const id = resJson.data.id;
-          console.log("[Request] Upload documents success, filename: ", file.name);
-          console.log("[Request] Upload documents success, id: ", id);
           storage.setItem(file.name, id);
           console.log(storage.getItem(file.name));
         }

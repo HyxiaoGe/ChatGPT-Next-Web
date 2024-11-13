@@ -110,7 +110,7 @@ export class CHATCHATApi implements LLMApi {
 
     if (modelConfig.plugin) {
       if (modelConfig.plugin[0] === "simple-chat" || modelConfig.plugin[0] === "file-chat") {
-        if (modelConfig.plugin[0] === "simple-chat") {
+        if (modelConfig.plugin[0] === "simple-chat" || path === "") {
           path = this.path(CHATCHAT.ChatPath);
         }
         console.log("current plugin: ", modelConfig.plugin[0]);

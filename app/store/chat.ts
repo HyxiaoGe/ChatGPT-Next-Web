@@ -855,8 +855,7 @@ export const useChatStore = createPersistStore(
   },
 );
 
-async function fetchWithTimeout(fileName: string, timeout = 30000) {
-  console.log("fetchWithTimeout: ", fileName);
+async function fetchWithTimeout(fileName: string, timeout = 120000) {
   return new Promise((resolve, reject) => {
     const tempId = localStorage.getItem(fileName);
     if (!isEmpty(tempId)) {
@@ -869,7 +868,6 @@ async function fetchWithTimeout(fileName: string, timeout = 30000) {
 
     const intervalId = setInterval(() => {
       const newTempId = localStorage.getItem(fileName);
-      console.log("newTempId: ", newTempId);
       if (!isEmpty(newTempId)) {
         clearInterval(intervalId);
         resolve(newTempId);

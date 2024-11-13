@@ -435,7 +435,7 @@ function ClearContextDivider() {
 
 export function ChatAction(props: {
   text: string;
-  customClass: string;
+  customClass?: string;
   icon: JSX.Element;
   onClick: () => void;
 }) {
@@ -459,7 +459,7 @@ export function ChatAction(props: {
 
   return (
     <div
-      className={`${styles["chat-input-action"]}  ${styles[props.customClass]} clickable`}
+      className={`${styles["chat-input-action"]}  ${styles[props.customClass || ""]} clickable`}
       onClick={() => {
         props.onClick();
         setTimeout(updateWidth, 1);
@@ -1184,6 +1184,9 @@ function _Chat() {
       return;
     }
     setIsLoading(true);
+    if (userInput.trim() === "" && !isEmpty(attachFiles)) {
+      userInput = `@${attachFiles[0]}: 请帮我分析文档的内容。`;
+    }
     chatStore
       .onUserInput(userInput, attachFiles)
       .then(() => setIsLoading(false));
@@ -1681,7 +1684,6 @@ function _Chat() {
   }
 
   async function uploadCloudFile() {
-    console.log('uploadCloudFile...................')
     const providerName = chatStore.currentSession().mask.modelConfig?.providerName
     const conversationalMode = chatStore.currentSession().mask.plugin?.[0]
     const cloud = YliyunCloud.getInstance();
@@ -1699,7 +1701,7 @@ function _Chat() {
             knowledgeBase = session.mask.modelConfig.knowledgeBase
             tempCache = false;
           }
-          CloudBaseCache.fetchDownloadFileUrl(fileInfo[0], fileInfo[1])
+          CloudBaseCache.fetchDownloadFileUrl(fileInfo[0], fileInfo[1], tempCache, knowledgeBase)
           safeLocalStorage().removeItem(fileNameWithPath)
         }
       }

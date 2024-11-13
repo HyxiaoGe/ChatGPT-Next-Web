@@ -57,7 +57,7 @@ export class CloudBaseCache {
     }
   }
 
-  static async fetchDownloadFileUrl(fi: string, fv: string): Promise<void> {
+  static async fetchDownloadFileUrl(fi: string, fv: string, isTempFile: boolean, knowledge_base_name?: string): Promise<void> {
     try {
       const path = `/api/file/down?fc=personal&fi=${fi}&fv=${fv}`;
 
@@ -73,7 +73,7 @@ export class CloudBaseCache {
       const result: ApiResponse = await response.json();
 
       if (result.status === 'ok' && result.data) {
-        await this.downloadFile(result.data.fileUri, result.data.fileName);
+        await this.downloadFile(result.data.fileUri, result.data.fileName, isTempFile, knowledge_base_name);
       }
     } catch (error) {
       console.error("Failed to fetch cloud file base list:", error);
@@ -81,7 +81,7 @@ export class CloudBaseCache {
     }
   }
 
-  static async downloadFile(fileUri: string, filename: string): Promise<void> {
+  static async downloadFile(fileUri: string, filename: string, isTempFile: boolean, knowledge_base_name?: string): Promise<void> {
     try {
       const path = `/api/content/${fileUri}&fn=${filename}`;
 
@@ -103,7 +103,7 @@ export class CloudBaseCache {
           throw Error('不支持的文件格式');
         }
 
-        uploadFileToChatChat(file, true);
+        uploadFileToChatChat(file, isTempFile, knowledge_base_name);
       }
     } catch (error) {
       console.error("Failed to fetch cloud file base list:", error);

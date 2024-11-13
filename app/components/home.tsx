@@ -184,7 +184,8 @@ function Screen() {
         <SideBar className={isHome ? styles["sidebar-show"] : ""} />
         <WindowContent>
           <Routes>
-            <Route path={Path.Home} element={<Chat />} />+
+            <Route path={Path.Home} element={<Chat />} />
+            <Route path={Path.NewChat} element={<NewChat />} />
             <Route path={Path.Masks} element={<MaskPage />} />
             <Route path={Path.Plugins} element={<PluginPage />} />
             <Route path={Path.SearchChat} element={<SearchChat />} />
@@ -222,7 +223,7 @@ export function useLoadData() {
 }
 
 /**解析参数**/
-function getParam(paramName) {
+function getParam(paramName: any) {
   let paramValue = "", isFound = !1;
   if (window.location.hash.indexOf("?") >= 0 && window.location.hash.indexOf("=") > 1) {
     let queryStr = window.location.hash.split('?')[1];
