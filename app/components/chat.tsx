@@ -1192,7 +1192,7 @@ function _Chat() {
         matchedChatCommand.invoke();
         setUserInput("");
       } else {
-        // or fill the prompt 666666666666666666666666666666666666666666666666666666666666666
+        // or fill the prompt
         setUserInput(prompt.content + prompt.title + ": ");
       }
       inputRef.current?.focus();
@@ -1624,46 +1624,40 @@ function _Chat() {
     const conversationalMode = chatStore.currentSession().mask.plugin?.[0]
 
     files.push(
-      ...(await new Promise<string[]>((res, rej) => {
-        const fileInput = document.createElement("input");
-        fileInput.type = "file";
-        fileInput.multiple = true;
-        fileInput.onchange = (event: any) => {
-          setUploading(true);
-          const files = event.target.files;
-          const filesData: string[] = [];
-          for (let i = 0; i < files.length; i++) {
-            const file = event.target.files[i];
-            if (providerName === 'CHATCHAT') {
-              let knowledgeBase = ''
-              let tempCache:boolean = false;
-              if (conversationalMode === 'file-chat') {
-                tempCache = true;
-              } else if (conversationalMode === 'knowledge-chat') {
-                knowledgeBase = session.mask.modelConfig.knowledgeBase
-                tempCache = false;
-              }
-              uploadFileToChatChat(file, tempCache, knowledgeBase)
-            }
-            uploadFileRemote(file)
-              .then((dataUrl) => {
-                filesData.push(dataUrl);
-                if (
-                  filesData.length === 3 ||
-                  filesData.length === files.length
-                ) {
-                  setUploading(false);
-                  res(filesData);
+        ...(await new Promise<string[]>((res, rej) => {
+          const fileInput = document.createElement("input");
+          fileInput.type = "file";
+          fileInput.multiple = true;
+          fileInput.onchange = (event: any) => {
+            setUploading(true);
+            const files = event.target.files;
+            const filesData: string[] = [];
+
+            for (let i = 0; i < files.length; i++) {
+              const file = event.target.files[i];
+              console.log('providerName: ', providerName)
+              if (providerName === 'CHATCHAT') {
+                let knowledgeBase = ''
+                let tempCache = false;
+                if (conversationalMode === 'file-chat') {
+                  tempCache = true;
+                } else if (conversationalMode === 'knowledge-chat') {
+                  knowledgeBase = session.mask.modelConfig.knowledgeBase
+                  tempCache = false;
                 }
-              })
-              .catch((e) => {
+                uploadFileToChatChat(file, tempCache, knowledgeBase)
+              }
+              // 直接使用文件名作为标识
+              filesData.push(file.name);
+
+              if (filesData.length === 3 || filesData.length === files.length) {
                 setUploading(false);
-                rej(e);
-              });
-          }
-        };
-        fileInput.click();
-      })),
+                res(filesData);
+              }
+            }
+          };
+          fileInput.click();
+        }))
     );
 
     const filesLength = files.length;
@@ -1674,16 +1668,27 @@ function _Chat() {
   }
 
   async function uploadCloudFile() {
+    console.log('uploadCloudFile...................')
+    const providerName = chatStore.currentSession().mask.modelConfig?.providerName
+    const conversationalMode = chatStore.currentSession().mask.plugin?.[0]
     const cloud = YliyunCloud.getInstance();
     const fileNameWithPath = userInput.split(':')[0];
-    const fileName = fileNameWithPath.split('/').pop();
-    safeLocalStorage().setItem(fileName as string, '')
     if (fileNameWithPath && fileNameWithPath !== '@') {
       const fileIdWithVersion = safeLocalStorage().getItem(fileNameWithPath)
       const fileInfo = fileIdWithVersion?.split(":") as string[];
       if (fileInfo) {
-        CloudBaseCache.fetchDownloadFileUrl(fileInfo[0], fileInfo[1])
-        safeLocalStorage().removeItem(fileNameWithPath)
+        if (providerName === 'CHATCHAT') {
+          let knowledgeBase = ''
+          let tempCache = false;
+          if (conversationalMode === 'file-chat') {
+            tempCache = true;
+          } else if (conversationalMode === 'knowledge-chat') {
+            knowledgeBase = session.mask.modelConfig.knowledgeBase
+            tempCache = false;
+          }
+          CloudBaseCache.fetchDownloadFileUrl(fileInfo[0], fileInfo[1])
+          safeLocalStorage().removeItem(fileNameWithPath)
+        }
       }
     }
   }

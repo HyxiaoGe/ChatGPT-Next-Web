@@ -389,6 +389,7 @@ export const useChatStore = createPersistStore(
               const fileName = url.match(/[^/]+$/)?.[0] ?? "";
               console.log("fileName: ", fileName)
               const tempId = await fetchWithTimeout(fileName) as string;
+              console.log("tempId: ", tempId)
               attachFiles[i] = tempId ? tempId : url;
             }
           }
@@ -854,10 +855,10 @@ export const useChatStore = createPersistStore(
   },
 );
 
-async function fetchWithTimeout(fileName: string, timeout = 300000) {
+async function fetchWithTimeout(fileName: string, timeout = 30000) {
+  console.log("fetchWithTimeout: ", fileName);
   return new Promise((resolve, reject) => {
     const tempId = localStorage.getItem(fileName);
-
     if (!isEmpty(tempId)) {
       resolve(tempId);
       return;
@@ -868,7 +869,7 @@ async function fetchWithTimeout(fileName: string, timeout = 300000) {
 
     const intervalId = setInterval(() => {
       const newTempId = localStorage.getItem(fileName);
-
+      console.log("newTempId: ", newTempId);
       if (!isEmpty(newTempId)) {
         clearInterval(intervalId);
         resolve(newTempId);

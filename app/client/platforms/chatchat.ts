@@ -113,6 +113,7 @@ export class CHATCHATApi implements LLMApi {
         if (modelConfig.plugin[0] === "simple-chat") {
           path = this.path(CHATCHAT.ChatPath);
         }
+        console.log("current plugin: ", modelConfig.plugin[0]);
         const messages = options.messages.map((v) => ({
           role: v.role === "system" ? "user" : v.role,
           content: getMessageTextContent(v),

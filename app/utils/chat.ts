@@ -127,36 +127,42 @@ export function base64Image2Blob(base64Data: string, contentType: string) {
   return new Blob([byteArray], { type: contentType });
 }
 
-export function uploadFile(file: File): Promise<string> {
-
-  const supportedFileTypes = Object.values(fileTypesConfig.supportedFileTypes).flat();
+export async function uploadFile(file: File): Promise<string> {
+  const supportedFileTypes = Object.values(
+    fileTypesConfig.supportedFileTypes,
+  ).flat();
 
   if (!supportedFileTypes.includes(file.type)) {
-    throw Error('不支持的文件格式');
+    throw Error("不支持的文件格式");
   }
 
   const body = new FormData();
   body.append("file", file);
 
-  return fetch(UPLOAD_URL, {
-    method: "post",
+  const res = await fetch(UPLOAD_URL, {
+    method: "POST",
     body,
     mode: "cors",
     credentials: "include",
-  })
-      .then((res) => res.json())
-      .then((res) => {
-        if (res?.code == 0 && res?.data) {
-          return res?.data;
-        }
-        throw Error(`upload Error: ${res?.msg}`);
-      });
+    headers: {
+      Accept: "application/json",
+    },
+  });
+  if (!res.ok) {
+    throw new Error(`Upload failed: ${res.status} ${res.statusText}`);
+  }
+  const res_1 = await res.json();
+  if (res_1?.code === 0 && res_1?.data) {
+    return res_1?.data;
+  }
+  throw Error(`Upload Error: ${res_1?.msg || "Unknown error"}`);
 }
 
 export async function uploadFileToChatChat(file: File, isTempFile: boolean, knowledge_base_name?: string): Promise<void> {
+  console.log("11111111111111111111111111111111")
   let path:string;
   const formData = new FormData();
-  storage.setItem(file.name, '');
+  // storage.setItem(file.name, '');
   formData.append("files", file);
   formData.append("chunk_size", "750");
   formData.append("chunk_overlap", "150");
@@ -188,10 +194,16 @@ export async function uploadFileToChatChat(file: File, isTempFile: boolean, know
 
     const resJson = await response.json();
 
+    console.log("[Request] Upload documents response", resJson);
+
     if (isTempFile) {
       if (resJson.code === 200) {
         if (resJson.data && resJson.data.id) {
-          storage.setItem(file.name, resJson.data.id);
+          const id = resJson.data.id;
+          console.log("[Request] Upload documents success, filename: ", file.name);
+          console.log("[Request] Upload documents success, id: ", id);
+          storage.setItem(file.name, id);
+          console.log(storage.getItem(file.name));
         }
       }
     }
