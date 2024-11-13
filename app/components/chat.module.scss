@@ -131,7 +131,15 @@
       justify-content: center;
     }
   }
+
+  .ab-bottom{
+    position: absolute !important;
+    top: -30px;
+    left: 40%;
+  }
 }
+
+
 
 .prompt-toast {
   position: absolute;
@@ -516,7 +524,7 @@
     width: $calc-image-width;
     height: $calc-image-width;
   }
-  
+
   .chat-message-item-image {
     max-width: calc(100vw/3*2);
   }

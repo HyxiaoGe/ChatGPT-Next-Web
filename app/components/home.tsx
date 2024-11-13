@@ -1,5 +1,7 @@
 "use client";
 
+import {func} from "prop-types";
+
 require("../polyfill");
 
 import { useState, useEffect } from "react";
@@ -219,6 +221,18 @@ export function useLoadData() {
   }, []);
 }
 
+/**解析参数**/
+function getParam(paramName) {
+  let paramValue = "", isFound = !1;
+  if (window.location.hash.indexOf("?") >= 0 && window.location.hash.indexOf("=") > 1) {
+    let queryStr = window.location.hash.split('?')[1];
+    let  arrSource = queryStr.split("&"), i = 0;
+    while (i < arrSource.length && !isFound) arrSource[i].indexOf("=") > 0
+    && arrSource[i].split("=")[0].toLowerCase() == paramName.toLowerCase() && (paramValue = arrSource[i].split("=")[1], isFound = !0), i++
+  }
+  return  paramValue
+}
+
 export function Home() {
   useSwitchTheme();
   useLoadData();
@@ -227,11 +241,9 @@ export function Home() {
   const accessStore = useAccessStore();
 
   useEffect(() => {
-     const urlParams = new URLSearchParams(window.location.search);
-
-     const urlValue = urlParams.get('fileUri');
-     const fileNameValue = urlParams.get('fileName');
-     if (urlValue && fileNameValue) {
+     const urlValue =  getParam('fileUri');
+     const fileNameValue = getParam('fileName');
+    if (urlValue && fileNameValue) {
        console.log('Received URL:', urlValue);
        console.log('Received fileName:', fileNameValue);
        accessStore.update((state) => {

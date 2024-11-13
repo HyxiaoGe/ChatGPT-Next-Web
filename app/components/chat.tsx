@@ -435,6 +435,7 @@ function ClearContextDivider() {
 
 export function ChatAction(props: {
   text: string;
+  customClass: string;
   icon: JSX.Element;
   onClick: () => void;
 }) {
@@ -458,7 +459,7 @@ export function ChatAction(props: {
 
   return (
     <div
-      className={`${styles["chat-input-action"]} clickable`}
+      className={`${styles["chat-input-action"]}  ${styles[props.customClass]} clickable`}
       onClick={() => {
         props.onClick();
         setTimeout(updateWidth, 1);
@@ -533,6 +534,8 @@ export function ChatActions(props: {
   const navigate = useNavigate();
   const chatStore = useChatStore();
   const pluginStore = usePluginStore();
+  // 窗口模式 只显示有限配置按钮
+  const isMobileScreen = useMobileScreen();
 
   // switch themes
   const theme = config.theme;
@@ -670,14 +673,9 @@ export function ChatActions(props: {
           icon={<StopIcon />}
         />
       )}
-      {!props.hitBottom && (
-        <ChatAction
-          onClick={props.scrollToBottom}
-          text={Locale.Chat.InputActions.ToBottom}
-          icon={<BottomIcon />}
-        />
-      )}
-      {props.hitBottom && (
+
+      {/** 选择prompt**/}
+      {(!isMobileScreen && !props.hitBottom) && (
         <ChatAction
           onClick={props.showPromptModal}
           text={Locale.Chat.InputActions.Settings}
@@ -749,56 +747,61 @@ export function ChatActions(props: {
       {/*  />*/}
       {/*)}*/}
 
-      <ChatAction
-        onClick={nextTheme}
-        text={Locale.Chat.InputActions.Theme[theme]}
-        icon={
-          <>
-            {theme === Theme.Auto ? (
-              <AutoIcon />
-            ) : theme === Theme.Light ? (
-              <LightIcon />
-            ) : theme === Theme.Dark ? (
-              <DarkIcon />
-            ) : null}
-          </>
-        }
-      />
+      {/** 聊天窗口主题**/}
+      {!isMobileScreen && <ChatAction
+          onClick={nextTheme}
+          text={Locale.Chat.InputActions.Theme[theme]}
+          icon={
+            <>
+              {theme === Theme.Auto ? (
+                  <AutoIcon />
+              ) : theme === Theme.Light ? (
+                  <LightIcon />
+              ) : theme === Theme.Dark ? (
+                  <DarkIcon />
+              ) : null}
+            </>
+          }
+      />}
 
-      <ChatAction
+      {/** 选择prompt**/}
+      {!isMobileScreen &&<ChatAction
         onClick={props.showPromptHints}
         text={Locale.Chat.InputActions.Prompt}
         icon={<PromptIcon />}
-      />
+      />}
 
-      <ChatAction
+      {/** 选择面具**/}
+      {!isMobileScreen &&<ChatAction
         onClick={() => {
           navigate(Path.Masks);
         }}
         text={Locale.Chat.InputActions.Masks}
         icon={<MaskIcon />}
-      />
+      />}
 
-      <ChatAction
-        text={Locale.Chat.InputActions.Clear}
-        icon={<ClearIcon />}
-        onClick={() => {
-          chatStore.updateCurrentSession((session) => {
-            if (session.clearContextIndex === session.messages.length) {
-              session.clearContextIndex = undefined;
-            } else {
-              session.clearContextIndex = session.messages.length;
-              session.memoryPrompt = ""; // will clear memory
-            }
-          });
-        }}
-      />
+      {/** 清除聊天内容**/}
+      {!isMobileScreen && <ChatAction
+          text={Locale.Chat.InputActions.Clear}
+          icon={<ClearIcon />}
+          onClick={() => {
+            chatStore.updateCurrentSession((session) => {
+              if (session.clearContextIndex === session.messages.length) {
+                session.clearContextIndex = undefined;
+              } else {
+                session.clearContextIndex = session.messages.length;
+                session.memoryPrompt = ""; // will clear memory
+              }
+            });
+          }}
+      />}
 
-      <ChatAction
-        onClick={() => setShowModelSelector(true)}
-        text={currentModelName}
-        icon={<RobotIcon />}
-      />
+      {/** 选择模型按钮**/}
+      {!isMobileScreen && <ChatAction
+          onClick={() => setShowModelSelector(true)}
+          text={currentModelName}
+          icon={<RobotIcon />}
+      /> }
 
       {showModelSelector && (
         <Selector
@@ -913,6 +916,16 @@ export function ChatActions(props: {
             showToast(style);
           }}
         />
+      )}
+
+      {/** 滚动到最新**/}
+      {!props.hitBottom && (
+          <ChatAction
+              onClick={props.scrollToBottom}
+              customClass={"ab-bottom"}
+              text={Locale.Chat.InputActions.ToBottom}
+              icon={<BottomIcon />}
+          />
       )}
     </div>
   );
@@ -1822,14 +1835,32 @@ function _Chat() {
               />
             </div>
           )}
+          {/*<div className="window-action-button">*/}
+          {/*  <IconButton*/}
+          {/*    icon={<ExportIcon />}*/}
+          {/*    bordered*/}
+          {/*    title={Locale.Chat.Actions.Export}*/}
+          {/*    onClick={() => {*/}
+          {/*      setShowExport(true);*/}
+          {/*    }}*/}
+          {/*  />*/}
+          {/*</div>*/}
           <div className="window-action-button">
             <IconButton
-              icon={<ExportIcon />}
-              bordered
-              title={Locale.Chat.Actions.Export}
-              onClick={() => {
-                setShowExport(true);
-              }}
+                icon={<ClearIcon />}
+                bordered
+                title={Locale.Chat.InputActions.Clear}
+                aria={Locale.Chat.InputActions.Clear}
+                onClick={() => {
+                  chatStore.updateCurrentSession((session) => {
+                    if (session.clearContextIndex === session.messages.length) {
+                      session.clearContextIndex = undefined;
+                    } else {
+                      session.clearContextIndex = session.messages.length;
+                      session.memoryPrompt = ""; // will clear memory
+                    }
+                  });
+                }}
             />
           </div>
           {showMaxIcon && (
