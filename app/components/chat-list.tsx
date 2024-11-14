@@ -30,6 +30,7 @@ export function ChatItem(props: {
   index: number;
   narrow?: boolean;
   mask: Mask;
+  fileId?:string;
 }) {
   const draggableRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -162,6 +163,7 @@ export function ChatList(props: { narrow?: boolean }) {
                 }}
                 narrow={props.narrow}
                 mask={item.mask}
+                fileId={item.fileId}
               />
             ))}
             {provided.placeholder}

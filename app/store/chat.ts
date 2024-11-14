@@ -73,6 +73,7 @@ export interface ChatStat {
 
 export interface ChatSession {
   id: string;
+  fileId?: string;
   topic: string;
 
   memoryPrompt: string;
@@ -91,10 +92,11 @@ export const BOT_HELLO: ChatMessage = createMessage({
   content: Locale.Store.BotHello,
 });
 
-function createEmptySession(): ChatSession {
+function createEmptySession(title?:string, fileId?: string): ChatSession {
   return {
     id: nanoid(),
-    topic: DEFAULT_TOPIC,
+    fileId,
+    topic: title || DEFAULT_TOPIC,
     memoryPrompt: "",
     messages: [],
     stat: {
@@ -193,6 +195,7 @@ const DEFAULT_CHAT_STATE = {
   sessions: [createEmptySession()],
   currentSessionIndex: 0,
   lastInput: "",
+  fileIdMapping: {} as Record<string, string>,
 };
 
 export const useChatStore = createPersistStore(
@@ -266,8 +269,8 @@ export const useChatStore = createPersistStore(
         });
       },
 
-      newSession(mask?: Mask) {
-        const session = createEmptySession();
+      newSession(title?: string, mask?: Mask) {
+        const session = createEmptySession(title);
 
         if (mask) {
           const config = useAppConfig.getState();
@@ -375,12 +378,13 @@ export const useChatStore = createPersistStore(
         if (modelConfig.providerName === 'CHATCHAT' && plugin?.at(0) === 'file-chat') {
           console.log("I'm coming!!!")
           const fileContent = content.split(':')[0];
-          // const regex = /^\/[\u4e00-\u9fa5a-zA-Z0-9_]+(?:\/[\u4e00-\u9fa5a-zA-Z0-9_()（）]+)*\.[a-zA-Z0-9]+$/;
-          // if (regex.test(fileContent)) {
+          console.log("fileContent: ", fileContent)
+          const regex = /^[\/\@][\u4e00-\u9fa5a-zA-Z0-9_]+(?:\/[\u4e00-\u9fa5a-zA-Z0-9_()（）]+)*\.[a-zA-Z0-9]+$/;
+          if (regex.test(fileContent)) {
             console.log("I'm coming again!!!")
-            attachFiles?.unshift(fileContent);
+            attachFiles?.unshift(fileContent.replace(/^@/, '').trim());
             console.log("attachFiles: ", attachFiles)
-          // }
+          }
         }
         if (attachFiles && attachFiles.length > 0) {
           if (modelConfig.providerName === 'CHATCHAT' && plugin?.at(0) === 'file-chat') {
@@ -779,6 +783,29 @@ export const useChatStore = createPersistStore(
           lastInput,
         });
       },
+
+      // 根据 fileId 获取会话属性
+      getSessionIndexByFileId(fileId: string) {
+        const sessions = get().sessions;
+        return sessions.findIndex(session => session.fileId === fileId);
+      },
+
+      createOrSwitchSession(fileId: string, title?: string) {
+        const index = get().getSessionIndexByFileId(fileId);
+
+        if (index !== -1) {
+          // 已存在对应的会话，切换到该会话
+          set(() => ({ currentSessionIndex: index }));
+          return;
+        }
+
+        const session = createEmptySession(title, fileId);
+        set((state) => ({
+          currentSessionIndex: 0,
+          sessions: [session].concat(state.sessions),
+        }))
+      }
+
     };
 
     return methods;
@@ -847,6 +874,13 @@ export const useChatStore = createPersistStore(
           const config = useAppConfig.getState();
           s.mask.modelConfig.compressModel = "";
           s.mask.modelConfig.compressProviderName = "";
+        });
+
+        newState.fileIdMapping = {};
+        newState.sessions.forEach(session => {
+          if (session.fileId) {
+            newState.fileIdMapping[session.fileId] = session.id;
+          }
         });
       }
 

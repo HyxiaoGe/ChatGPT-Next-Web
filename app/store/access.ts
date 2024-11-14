@@ -132,6 +132,7 @@ chatchatUrl: DEFAULT_CHATCHAT_URL,
   fileName: "",
   fileUri: "",
   ct: "",
+  fileId: "",
 
   // tts config
   edgeTTSVoiceName: "zh-CN-YunxiNeural",
@@ -253,6 +254,24 @@ export const useAccessStore = createPersistStore(
           fetchState = 2;
         });
     },
+      setFileParams: (params: { fileUri?: string; fileName?: string; ct?: string; fileId?: string }) => {
+          set((state) => ({
+              ...state,
+              fileUri: params.fileUri || "",
+              fileName: params.fileName || "",
+              ct: params.ct || "",
+              fileId: params.fileId || "",
+          }));
+      },
+      clearFileParams: () => {
+          set((state) => ({
+              ...state,
+              fileUri: "",
+              fileName: "",
+              ct: "",
+              fileId: "",
+          }));
+      },
   }),
   {
     name: StoreKey.Access,

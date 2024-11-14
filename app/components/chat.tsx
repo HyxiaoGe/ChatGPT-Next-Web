@@ -1066,8 +1066,10 @@ function _Chat() {
   type RenderMessage = ChatMessage & { preview?: boolean };
 
   const chatStore = useChatStore();
+  const accessStore = useAccessStore();
   const session = chatStore.currentSession();
   const config = useAppConfig();
+
   const fontSize = config.fontSize;
   const fontFamily = config.fontFamily;
 
@@ -1125,18 +1127,76 @@ function _Chat() {
   );
 
   const uploaded = useRef(false);
-  const accessStore = useAccessStore();
-  const fileUri = accessStore.fileUri
-  const fileName = accessStore.fileName
-  const ct = accessStore.ct
+  const prevFileIdRef = useRef<string>('')
+  const prevParamsRef = useRef<{
+    fileUri: string;
+    fileName: string;
+    ct: string;
+  }>({ fileUri: '', fileName: '', ct: ''});
+
+  const fileUri = accessStore.fileUri;
+  const fileName = accessStore.fileName;
+  const ct = accessStore.ct;
+
   useEffect(() => {
-    if (!uploaded.current && fileUri && fileName && ct) {
-      uploadCloudFileByUrl(fileUri, fileName, ct)
-      uploaded.current = true
+    let isActive = true;
+
+    const fileId = accessStore.fileId
+
+    console.log("=== 参数检查 ===", {
+      当前fileId: fileId,
+      历史fileId: prevFileIdRef.current,
+      是否已上传: uploaded.current,
+      参数是否有效: Boolean(fileId),
+      参数是否变化: (fileId !== prevFileIdRef.current)
+    });
+
+    // 检查参数是否真的发生了变化
+    const fileIdChanged = fileId !== prevFileIdRef.current;
+
+    if (!uploaded.current && fileId && fileIdChanged) {
+      console.log("接收到预览链接请求.....................");
+
+      // 检查是否有新的 fileId
+      prevFileIdRef.current = fileId;
+
+      // chatStore.newSession(`关于 ${decodeURIComponent(fileName)} 的文档分析`);
+      // 创建新会话或切换到现有会话
+      chatStore.createOrSwitchSession(fileId, `关于 ${decodeURIComponent(fileName)} 的文档分析`);
+
+      uploaded.current = false;
+      // uploadCloudFileByUrl(fileUri, fileName, ct)
+      //     .then(() => {
+      //       if (!isActive) return;
+      //       uploaded.current = true;
+      //       accessStore.clearFileParams();
+      //     })
+      //     .catch((error) => {
+      //       console.error("Upload failed:", error);
+      //       if (isActive) {
+      //         uploaded.current = false;
+      //         accessStore.clearFileParams();
+      //       }
+      //     });
+    } else if (!fileId && prevFileIdRef.current) {
+      prevFileIdRef.current = '';
+      uploaded.current = false;
     }
+
+    return () => {
+      isActive = false;
+    };
   }, [fileUri, fileName, ct]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // 组件卸载时清理
+  useEffect(() => {
+    return () => {
+      if (!uploaded.current) {
+        accessStore.clearFileParams();
+      }
+    };
+  }, []);
+
   useEffect(measure, [userInput]);
 
   // chat commands shortcuts
@@ -1713,17 +1773,23 @@ function _Chat() {
 
   async function uploadCloudFileByUrl(url: string, fileName: string,  ct: string) {
     try {
-      await CloudBaseCache.downloadFile(url, fileName, true, '', ct)
+      console.log("uploadCloudFileByUrl............................")
       let decodeFileName = decodeURIComponent(fileName)
-      let userInput = `@${decodeFileName}: 请帮我分析文档的内容。`;
-      chatStore.updateCurrentSession((session) => {
-        if (!session.mask.plugin) {
-          session.mask.plugin = ['file-chat']
-        } else {
-          session.mask.plugin[0] = 'file-chat'
+      if (decodeFileName) {
+        const tempId = safeLocalStorage().getItem(decodeFileName)
+        if (!tempId) {
+          await CloudBaseCache.downloadFile(url, fileName, true, '', ct)
         }
-      });
-      doSubmit(userInput);
+        let userInput = `@${decodeFileName}: 请帮我分析文档的内容。`;
+        chatStore.updateCurrentSession((session) => {
+          if (!session.mask.plugin) {
+            session.mask.plugin = ['file-chat']
+          } else {
+            session.mask.plugin[0] = 'file-chat'
+          }
+        });
+        doSubmit(userInput);
+      }
     } catch (error) {
       throw error
     }

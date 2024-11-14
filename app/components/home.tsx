@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 
 import styles from "./home.module.scss";
 
@@ -241,29 +241,38 @@ function getParam(paramName: any) {
 }
 
 export function Home() {
-  const mounted = useRef(false);
+  const accessStore = useAccessStore();
 
   useSwitchTheme();
   useLoadData();
   useHtmlLang();
 
-  const accessStore = useAccessStore();
+  const handleURLParams = useCallback(() => {
+    const hasFileParams = Boolean(
+        getParam("fileUri") && getParam("fileName") && getParam("ct") && getParam("fileId")
+    );
+
+    console.log("[URL Params] Checking params:", hasFileParams);
+
+    if (hasFileParams) {
+      accessStore.setFileParams({
+        fileUri: decodeURIComponent(getParam("fileUri")),
+        fileName: getParam("fileName"),
+        ct: getParam("ct"),
+        fileId: getParam("fileId")
+      })
+    } else {
+      accessStore.clearFileParams()
+    }
+  }, [])
 
   useEffect(() => {
-    if (!mounted.current) {
-      console.log("---------------+----------------")
-      const fileUriValue = getParam("fileUri");
-      const fileNameValue = getParam("fileName");
-      const ctValue = getParam("ct");
-      if (fileUriValue && fileNameValue && ctValue) {
-        accessStore.update((state) => {
-          state.fileUri = decodeURIComponent(fileUriValue);
-          console.log("decode fileUriValue:", state.fileUri);
-          state.fileName = fileNameValue as string;
-          state.ct = ctValue as string;
-        });
-      }
-      mounted.current = true;
+    console.log("[Home] First mount, handling URL params");
+    handleURLParams();
+
+    window.addEventListener("hashchange", handleURLParams)
+    return () => {
+      window.removeEventListener("hashchange", handleURLParams)
     }
   }, []);
 
