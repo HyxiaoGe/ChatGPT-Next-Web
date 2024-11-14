@@ -1,10 +1,6 @@
 "use client";
 
-import {func} from "prop-types";
-
-require("../polyfill");
-
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import styles from "./home.module.scss";
 
@@ -21,8 +17,8 @@ import { getISOLang, getLang } from "../locales";
 
 import {
   HashRouter as Router,
-  Routes,
   Route,
+  Routes,
   useLocation,
 } from "react-router-dom";
 import { SideBar } from "./sidebar";
@@ -31,6 +27,8 @@ import { AuthPage } from "./auth";
 import { getClientConfig } from "../config/client";
 import { type ClientApi, getClientApi } from "../client/api";
 import { useAccessStore } from "../store";
+
+require("../polyfill");
 
 export function Loading(props: { noLogo?: boolean }) {
   return (
@@ -224,17 +222,27 @@ export function useLoadData() {
 
 /**解析参数**/
 function getParam(paramName: any) {
-  let paramValue = "", isFound = !1;
-  if (window.location.hash.indexOf("?") >= 0 && window.location.hash.indexOf("=") > 1) {
-    let queryStr = window.location.hash.split('?')[1];
-    let  arrSource = queryStr.split("&"), i = 0;
-    while (i < arrSource.length && !isFound) arrSource[i].indexOf("=") > 0
-    && arrSource[i].split("=")[0].toLowerCase() == paramName.toLowerCase() && (paramValue = arrSource[i].split("=")[1], isFound = !0), i++
+  let paramValue = "",
+    isFound = !1;
+  if (
+    window.location.hash.indexOf("?") >= 0 &&
+    window.location.hash.indexOf("=") > 1
+  ) {
+    let queryStr = window.location.hash.split("?")[1];
+    let arrSource = queryStr.split("&"),
+      i = 0;
+    while (i < arrSource.length && !isFound)
+      arrSource[i].indexOf("=") > 0 &&
+        arrSource[i].split("=")[0].toLowerCase() == paramName.toLowerCase() &&
+        ((paramValue = arrSource[i].split("=")[1]), (isFound = !0)),
+        i++;
   }
-  return  paramValue
+  return paramValue;
 }
 
 export function Home() {
+  const mounted = useRef(false);
+
   useSwitchTheme();
   useLoadData();
   useHtmlLang();
@@ -242,16 +250,21 @@ export function Home() {
   const accessStore = useAccessStore();
 
   useEffect(() => {
-     const urlValue =  getParam('fileUri');
-     const fileNameValue = getParam('fileName');
-    if (urlValue && fileNameValue) {
-       console.log('Received URL:', urlValue);
-       console.log('Received fileName:', fileNameValue);
-       accessStore.update((state) => {
-         state.fileUri = urlValue;
-         state.fileName = fileNameValue as string;
-       })
-     }
+    if (!mounted.current) {
+      console.log("---------------+----------------")
+      const fileUriValue = getParam("fileUri");
+      const fileNameValue = getParam("fileName");
+      const ctValue = getParam("ct");
+      if (fileUriValue && fileNameValue && ctValue) {
+        accessStore.update((state) => {
+          state.fileUri = decodeURIComponent(fileUriValue);
+          console.log("decode fileUriValue:", state.fileUri);
+          state.fileName = fileNameValue as string;
+          state.ct = ctValue as string;
+        });
+      }
+      mounted.current = true;
+    }
   }, []);
 
   useEffect(() => {

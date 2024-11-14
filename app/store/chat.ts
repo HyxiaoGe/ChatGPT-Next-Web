@@ -375,12 +375,12 @@ export const useChatStore = createPersistStore(
         if (modelConfig.providerName === 'CHATCHAT' && plugin?.at(0) === 'file-chat') {
           console.log("I'm coming!!!")
           const fileContent = content.split(':')[0];
-          const regex = /^\/[\u4e00-\u9fa5a-zA-Z0-9_]+(?:\/[\u4e00-\u9fa5a-zA-Z0-9_()（）]+)*\.[a-zA-Z0-9]+$/;
-          if (regex.test(fileContent)) {
+          // const regex = /^\/[\u4e00-\u9fa5a-zA-Z0-9_]+(?:\/[\u4e00-\u9fa5a-zA-Z0-9_()（）]+)*\.[a-zA-Z0-9]+$/;
+          // if (regex.test(fileContent)) {
             console.log("I'm coming again!!!")
             attachFiles?.unshift(fileContent);
             console.log("attachFiles: ", attachFiles)
-          }
+          // }
         }
         if (attachFiles && attachFiles.length > 0) {
           if (modelConfig.providerName === 'CHATCHAT' && plugin?.at(0) === 'file-chat') {
@@ -856,8 +856,9 @@ export const useChatStore = createPersistStore(
 );
 
 async function fetchWithTimeout(fileName: string, timeout = 120000) {
+  fileName = fileName.replace(/^@/, '');
   return new Promise((resolve, reject) => {
-    const tempId = localStorage.getItem(fileName);
+    const tempId = localStorage.getItem(decodeURIComponent(fileName));
     if (!isEmpty(tempId)) {
       resolve(tempId);
       return;
@@ -867,7 +868,8 @@ async function fetchWithTimeout(fileName: string, timeout = 120000) {
     let elapsedTime = 0;
 
     const intervalId = setInterval(() => {
-      const newTempId = localStorage.getItem(fileName);
+      const newTempId = localStorage.getItem(decodeURIComponent(fileName));
+      console.log("newTempId: ", newTempId)
       if (!isEmpty(newTempId)) {
         clearInterval(intervalId);
         resolve(newTempId);

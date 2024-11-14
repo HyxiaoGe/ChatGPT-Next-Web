@@ -81,7 +81,7 @@ export class CloudBaseCache {
     }
   }
 
-  static async downloadFile(fileUri: string, filename: string, isTempFile: boolean, knowledge_base_name?: string): Promise<void> {
+  static async downloadFile(fileUri: string, filename: string, isTempFile: boolean, knowledge_base_name?: string, ct?: string): Promise<void> {
     try {
       const path = `/api/content/${fileUri}&fn=${filename}`;
 
@@ -89,7 +89,7 @@ export class CloudBaseCache {
         method: "GET",
         headers: {
           accept: "application/json",
-          ct: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjk4LCJ0aW1lIjoxNzMxMjk3MTQ2LCJrZXkiOiIxMjM0NTY3NC4xIiwiaXAiOiIxOTIuMTY4LjI1MC4xMjQiLCJkZXZpY2UiOiJ3ZWIiLCJpYXQiOjE3MzEyOTcxNDZ9.r4D9puRwUjb7LnKmEkOYy098c8oD4I0EX_Am2b5Rc30",
+          ct: `${ct}`,
           cv: "4.13.0",
         },
       });

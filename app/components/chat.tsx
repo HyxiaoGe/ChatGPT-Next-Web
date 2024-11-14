@@ -1124,14 +1124,17 @@ function _Chat() {
     },
   );
 
+  const uploaded = useRef(false);
   const accessStore = useAccessStore();
   const fileUri = accessStore.fileUri
   const fileName = accessStore.fileName
+  const ct = accessStore.ct
   useEffect(() => {
-    if (fileUri && fileName) {
-      uploadCloudFileByUrl(fileUri, fileName)
+    if (!uploaded.current && fileUri && fileName && ct) {
+      uploadCloudFileByUrl(fileUri, fileName, ct)
+      uploaded.current = true
     }
-  }, [fileUri, fileName]);
+  }, [fileUri, fileName, ct]);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(measure, [userInput]);
@@ -1708,11 +1711,22 @@ function _Chat() {
     }
   }
 
-  async function uploadCloudFileByUrl(fileName: string, url: string) {
-    console.log('uploadCloudFileByUrl', fileName, url)
-    // safeLocalStorage().setItem(fileName as string, '')
-
-    // CloudBaseCache.downloadFile(url, fileName)
+  async function uploadCloudFileByUrl(url: string, fileName: string,  ct: string) {
+    try {
+      await CloudBaseCache.downloadFile(url, fileName, true, '', ct)
+      let decodeFileName = decodeURIComponent(fileName)
+      let userInput = `@${decodeFileName}: 请帮我分析文档的内容。`;
+      chatStore.updateCurrentSession((session) => {
+        if (!session.mask.plugin) {
+          session.mask.plugin = ['file-chat']
+        } else {
+          session.mask.plugin[0] = 'file-chat'
+        }
+      });
+      doSubmit(userInput);
+    } catch (error) {
+      throw error
+    }
   }
 
   async function fetchKnowledgeBases() {

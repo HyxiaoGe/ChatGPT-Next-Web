@@ -140,10 +140,6 @@ if (mode !== "export") {
         source: '/knowledge_base/temp_kb/:path*',
         destination: 'http://127.0.0.1:7861/knowledge_base/temp_kb/:path*',
         basePath: false,
-      },
-      {
-        source: '/api/cache/upload',
-        destination: 'http://192.168.250.121:3000/api/cache/upload',
       }
     ];
     

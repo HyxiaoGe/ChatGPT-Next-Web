@@ -131,6 +131,7 @@ chatchatUrl: DEFAULT_CHATCHAT_URL,
 
   fileName: "",
   fileUri: "",
+  ct: "",
 
   // tts config
   edgeTTSVoiceName: "zh-CN-YunxiNeural",
