@@ -112,7 +112,7 @@ export class CloudBaseCache {
       }
     } else if (contentType === 1) {
       console.log("字符串下载")
-      const file = new File([fileUri], filename, {type: 'text/html'});
+      const file = new File([fileUri], filename, {type: 'text/plain'});
       uploadFileToChatChat(file, isTempFile, knowledge_base_name);
     }
   }

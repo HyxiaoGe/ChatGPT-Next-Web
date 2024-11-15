@@ -383,7 +383,7 @@ export const useChatStore = createPersistStore(
           if (regex.test(fileContent)) {
             console.log("I'm coming again!!!")
             attachFiles?.unshift(fileContent.replace(/^@/, '').trim());
-            console.log("attachFiles: ", attachFiles)
+            console.log("111attachFiles: ", attachFiles)
           }
         }
         if (attachFiles && attachFiles.length > 0) {

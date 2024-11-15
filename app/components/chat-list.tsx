@@ -119,6 +119,13 @@ export function ChatList(props: { narrow?: boolean }) {
   const navigate = useNavigate();
   const isMobileScreen = useMobileScreen();
 
+  useEffect(() => {
+    if (sessions.length > 0) {
+      selectSession(0);
+      navigate(Path.Chat)
+    }
+  }, [sessions]);
+
   const onDragEnd: OnDragEndResponder = (result) => {
     const { destination, source } = result;
     if (!destination) {

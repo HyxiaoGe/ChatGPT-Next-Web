@@ -254,8 +254,10 @@ export function Home() {
     const fileId = getParam("fileId")
     const contentType = Number(getParam("contentType"))
 
+    console.log({fileUri, fileName, ct, fileId, contentType})
+
     console.log("11122133213")
-    if (fileId && fileName && fileUri && ct && contentType) {
+    if (fileId && fileName && fileUri && ct) {
       console.log("I'm coming!!!!")
       accessStore.setFileParams({
         fileUri: decodeURIComponent(fileUri),
