@@ -247,34 +247,31 @@ export function Home() {
   useLoadData();
   useHtmlLang();
 
+  // 简化 URL 参数处理
   const handleURLParams = useCallback(() => {
-    const hasFileParams = Boolean(
-        getParam("fileUri") && getParam("fileName") && getParam("ct") && getParam("fileId")
-    );
+    const fileUri = getParam("fileUri")
+    const fileName = getParam("fileName")
+    const ct = getParam("ct")
+    const fileId = getParam("fileId")
 
-    console.log("[URL Params] Checking params:", hasFileParams);
-
-    if (hasFileParams) {
+    if (fileId && fileName && fileUri && ct) {
+      // 直接设置当前参数
       accessStore.setFileParams({
-        fileUri: decodeURIComponent(getParam("fileUri")),
-        fileName: getParam("fileName"),
-        ct: getParam("ct"),
-        fileId: getParam("fileId")
-      })
+        fileUri: decodeURIComponent(fileUri),
+        fileName,
+        ct,
+        fileId
+      });
     } else {
-      accessStore.clearFileParams()
-    }
-  }, [])
-
-  useEffect(() => {
-    console.log("[Home] First mount, handling URL params");
-    handleURLParams();
-
-    window.addEventListener("hashchange", handleURLParams)
-    return () => {
-      window.removeEventListener("hashchange", handleURLParams)
+      accessStore.clearFileParams();
     }
   }, []);
+
+  useEffect(() => {
+    handleURLParams();
+    window.addEventListener("hashchange", handleURLParams);
+    return () => window.removeEventListener("hashchange", handleURLParams);
+  }, [handleURLParams]);
 
   useEffect(() => {
     console.log("[Config] got config from build time", getClientConfig());

@@ -784,28 +784,40 @@ export const useChatStore = createPersistStore(
         });
       },
 
-      // 根据 fileId 获取会话属性
       getSessionIndexByFileId(fileId: string) {
         const sessions = get().sessions;
         return sessions.findIndex(session => session.fileId === fileId);
       },
 
+// chat.ts
+
       createOrSwitchSession(fileId: string, title?: string) {
-        const index = get().getSessionIndexByFileId(fileId);
+        set((state) => {
+          // 先检查 sessions 是否为空
+          if (state.sessions.length === 0) {
+            const newSession = createEmptySession(title, fileId);
+            return {
+              sessions: [newSession],
+              currentSessionIndex: 0
+            };
+          }
 
-        if (index !== -1) {
-          // 已存在对应的会话，切换到该会话
-          set(() => ({ currentSessionIndex: index }));
-          return;
-        }
+          // 查找已存在的会话
+          const index = state.sessions.findIndex(session => session.fileId === fileId);
 
-        const session = createEmptySession(title, fileId);
-        set((state) => ({
-          currentSessionIndex: 0,
-          sessions: [session].concat(state.sessions),
-        }))
+          if (index !== -1) {
+            // 如果找到已存在的会话，只更新索引
+            return { currentSessionIndex: index };
+          } else {
+            // 如果是新会话，添加到最前面
+            const newSession = createEmptySession(title, fileId);
+            return {
+              sessions: [newSession, ...state.sessions],
+              currentSessionIndex: 0
+            };
+          }
+        });
       }
-
     };
 
     return methods;

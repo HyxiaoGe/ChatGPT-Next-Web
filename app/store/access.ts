@@ -1,20 +1,21 @@
 import {
-    GoogleSafetySettingsThreshold,
-    ServiceProvider,
-    StoreKey,
-    ApiPath,
-    OPENAI_BASE_URL,
-    ANTHROPIC_BASE_URL,
-    GEMINI_BASE_URL,
-    BAIDU_BASE_URL,
-    BYTEDANCE_BASE_URL,
-    ALIBABA_BASE_URL,
-    TENCENT_BASE_URL,
-    MOONSHOT_BASE_URL,
-    STABILITY_BASE_URL,
-    IFLYTEK_BASE_URL,
-    XAI_BASE_URL,
-    CHATGLM_BASE_URL, CHATCHAT_BASE_URL,
+  ALIBABA_BASE_URL,
+  ANTHROPIC_BASE_URL,
+  ApiPath,
+  BAIDU_BASE_URL,
+  BYTEDANCE_BASE_URL,
+  CHATCHAT_BASE_URL,
+  CHATGLM_BASE_URL,
+  GEMINI_BASE_URL,
+  GoogleSafetySettingsThreshold,
+  IFLYTEK_BASE_URL,
+  MOONSHOT_BASE_URL,
+  OPENAI_BASE_URL,
+  ServiceProvider,
+  STABILITY_BASE_URL,
+  StoreKey,
+  TENCENT_BASE_URL,
+  XAI_BASE_URL,
 } from "../constant";
 import { getHeaders } from "../client/api";
 import { getClientConfig } from "../config/client";
@@ -113,8 +114,8 @@ const DEFAULT_ACCESS_STATE = {
   xaiUrl: DEFAULT_XAI_URL,
   xaiApiKey: "",
 
-// chatchat
-chatchatUrl: DEFAULT_CHATCHAT_URL,
+  // chatchat
+  chatchatUrl: DEFAULT_CHATCHAT_URL,
 
   // chatglm
   chatglmUrl: DEFAULT_CHATGLM_URL,
@@ -254,24 +255,32 @@ export const useAccessStore = createPersistStore(
           fetchState = 2;
         });
     },
-      setFileParams: (params: { fileUri?: string; fileName?: string; ct?: string; fileId?: string }) => {
-          set((state) => ({
-              ...state,
-              fileUri: params.fileUri || "",
-              fileName: params.fileName || "",
-              ct: params.ct || "",
-              fileId: params.fileId || "",
-          }));
-      },
-      clearFileParams: () => {
-          set((state) => ({
-              ...state,
-              fileUri: "",
-              fileName: "",
-              ct: "",
-              fileId: "",
-          }));
-      },
+    setFileParams: (params: {
+      fileUri?: string;
+      fileName?: string;
+      ct?: string;
+      fileId?: string;
+    }) => {
+      set((state) => ({
+        ...state,
+        fileUri: params.fileUri || "",
+        fileName: params.fileName || "",
+        ct: params.ct || "",
+        fileId: params.fileId || "",
+      }));
+    },
+    currentParams() {
+      return get();
+    },
+    clearFileParams: () => {
+      set((state) => ({
+        ...state,
+        fileUri: "",
+        fileName: "",
+        ct: "",
+        fileId: "",
+      }));
+    },
   }),
   {
     name: StoreKey.Access,

@@ -51,7 +51,10 @@ export function ChatItem(props: {
             (currentPath === Path.Chat || currentPath === Path.Home) &&
             styles["chat-item-selected"]
           }`}
-          onClick={props.onClick}
+          onClick={() => {
+            console.log("Chat item clicked:", props.title, props.fileId);
+            props.onClick?.();
+          }}
           ref={(ele) => {
             draggableRef.current = ele;
             provided.innerRef(ele);
@@ -150,8 +153,10 @@ export function ChatList(props: { narrow?: boolean }) {
                 index={i}
                 selected={i === selectedIndex}
                 onClick={() => {
-                  navigate(Path.Chat);
+                  console.log("Before switch - current index:", selectedIndex);
                   selectSession(i);
+                  console.log("After switch - new index:", i);
+                  navigate(Path.Chat);
                 }}
                 onDelete={async () => {
                   if (
