@@ -789,32 +789,30 @@ export const useChatStore = createPersistStore(
         return sessions.findIndex(session => session.fileId === fileId);
       },
 
-// chat.ts
-
       createOrSwitchSession(fileId: string, title?: string) {
         set((state) => {
-          // 先检查 sessions 是否为空
-          if (state.sessions.length === 0) {
-            const newSession = createEmptySession(title, fileId);
-            return {
-              sessions: [newSession],
-              currentSessionIndex: 0
-            };
-          }
+          try {
+            const existingIndex = state.sessions.findIndex(
+                session => session.fileId === fileId
+            );
 
-          // 查找已存在的会话
-          const index = state.sessions.findIndex(session => session.fileId === fileId);
-
-          if (index !== -1) {
-            // 如果找到已存在的会话，只更新索引
-            return { currentSessionIndex: index };
-          } else {
-            // 如果是新会话，添加到最前面
-            const newSession = createEmptySession(title, fileId);
-            return {
-              sessions: [newSession, ...state.sessions],
-              currentSessionIndex: 0
-            };
+            if (existingIndex !== -1) {
+              // 找到已存在的会话，直接切换
+              return {
+                currentSessionIndex: existingIndex,
+                sessions: [...state.sessions]
+              };
+            } else {
+              // 创建新会话
+              const newSession = createEmptySession(title, fileId);
+              return {
+                sessions: [newSession, ...state.sessions],
+                currentSessionIndex: 0
+              };
+            }
+          } catch (error) {
+            console.error("[ChatStore] Error in createOrSwitchSession:", error);
+            return state;
           }
         });
       }

@@ -261,16 +261,19 @@ export const useAccessStore = createPersistStore(
       ct?: string;
       fileId?: string;
     }) => {
-      set((state) => ({
-        ...state,
-        fileUri: params.fileUri || "",
-        fileName: params.fileName || "",
-        ct: params.ct || "",
-        fileId: params.fileId || "",
-      }));
+      set((state) => {
+        return {
+            ...state,
+            fileUri: params.fileUri || "",
+            fileName: params.fileName || "",
+            ct: params.ct || "",
+            fileId: params.fileId || "",
+        }
+      });
+        console.log("Updated file params:", params);
     },
-    currentParams() {
-      return get();
+    currentFileParams() {
+        return  {fileId: get().fileId, fileName: get().fileName, fileUri: get().fileUri, ct: get().ct}
     },
     clearFileParams: () => {
       set((state) => ({

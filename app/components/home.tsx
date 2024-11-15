@@ -247,7 +247,6 @@ export function Home() {
   useLoadData();
   useHtmlLang();
 
-  // 简化 URL 参数处理
   const handleURLParams = useCallback(() => {
     const fileUri = getParam("fileUri")
     const fileName = getParam("fileName")
@@ -255,13 +254,13 @@ export function Home() {
     const fileId = getParam("fileId")
 
     if (fileId && fileName && fileUri && ct) {
-      // 直接设置当前参数
       accessStore.setFileParams({
         fileUri: decodeURIComponent(fileUri),
-        fileName,
+        fileName: decodeURIComponent(fileName),
         ct,
         fileId
       });
+      console.log("currentFileParams: ", accessStore.currentFileParams())
     } else {
       accessStore.clearFileParams();
     }

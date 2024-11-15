@@ -8,7 +8,7 @@ import {
   OnDragEndResponder,
 } from "@hello-pangea/dnd";
 
-import { useChatStore } from "../store";
+import {useAccessStore, useChatStore} from "../store";
 
 import Locale from "../locales";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -106,6 +106,7 @@ export function ChatItem(props: {
 }
 
 export function ChatList(props: { narrow?: boolean }) {
+  const accessStore = useAccessStore();
   const [sessions, selectedIndex, selectSession, moveSession] = useChatStore(
     (state) => [
       state.sessions,
@@ -152,11 +153,29 @@ export function ChatList(props: { narrow?: boolean }) {
                 id={item.id}
                 index={i}
                 selected={i === selectedIndex}
+                  // ChatList 组件中的点击处理
                 onClick={() => {
                   console.log("Before switch - current index:", selectedIndex);
                   selectSession(i);
                   console.log("After switch - new index:", i);
-                  navigate(Path.Chat);
+
+                  // 如果是文档分析会话，更新 URL
+                  const session = sessions[i];
+                  if (session.fileId) {
+                    navigate({
+                      pathname: Path.Chat,
+                      search: `?fileId=${session.fileId}`,
+                    }, { replace: true });
+                    accessStore.setFileParams({
+                      fileId: session.fileId,
+                      fileName: session.topic,
+                      fileUri: accessStore.currentFileParams().fileUri,
+                      ct: accessStore.currentFileParams().ct
+                    });
+                  } else {
+                    navigate(Path.Chat);
+                    accessStore.clearFileParams();
+                  }
                 }}
                 onDelete={async () => {
                   if (

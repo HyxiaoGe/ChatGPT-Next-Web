@@ -95,7 +95,7 @@ import {
   showPrompt,
   showToast,
 } from "./ui-lib";
-import { useNavigate } from "react-router-dom";
+import {useLocation, useNavigate} from "react-router-dom";
 import {
   CHAT_PAGE_SIZE,
   DEFAULT_TTS_ENGINE,
@@ -1126,35 +1126,44 @@ function _Chat() {
     },
   );
 
-  const sessionIndex = chatStore.currentSessionIndex;
+  const location = useLocation();
 
   useEffect(() => {
-    const params = accessStore.currentParams();
-    const { fileId, fileName } = params;
+    const urlFileId = new URLSearchParams(location.search).get('fileId');
+    const { fileName, fileId } = accessStore.currentFileParams();
+    const currentSession = chatStore.currentSession();
 
-    if (fileId && fileName) {
-      const currentSession = chatStore.currentSession();
-      // 只在 fileId 不匹配时切换会话
-      if (currentSession?.fileId !== fileId) {
-        chatStore.createOrSwitchSession(
-            fileId,
-            `关于 ${decodeURIComponent(fileName)} 的文档分析`
-        );
+    if (urlFileId && fileName && currentSession?.fileId !== urlFileId) {
+      chatStore.createOrSwitchSession(
+          urlFileId,
+          decodeURIComponent(fileName)
+      );
+    }
+    else if (!urlFileId && currentSession?.fileId) {
+      const normalSessionIndex = chatStore.sessions.findIndex(s => !s.fileId);
+      if (normalSessionIndex !== -1) {
+        chatStore.selectSession(normalSessionIndex);
+      } else {
+        chatStore.newSession();
       }
     }
-  }, [accessStore.currentParams().fileId, accessStore.currentParams().fileName]);
+  }, [location.search]);
 
-  // 添加日志查看会话切换
   useEffect(() => {
-    console.log("Current session changed:", {
-      index: sessionIndex,
-      session: chatStore.currentSession(),
-    });
-  }, [sessionIndex, chatStore]);
+    const session = chatStore.currentSession();
+    if (session?.fileId) {
+      const searchParams = new URLSearchParams(location.search);
+      if (session.fileId !== searchParams.get('fileId')) {
+        navigate({
+          pathname: location.pathname,
+          search: `?fileId=${session.fileId}`,
+        }, { replace: true });
+      }
+    }
+  }, [chatStore.currentSessionIndex]);
 
   useEffect(measure, [userInput]);
 
-  // chat commands shortcuts
   const chatCommands = useChatCommand({
     new: () => chatStore.newSession(),
     newm: () => navigate(Path.NewChat),
