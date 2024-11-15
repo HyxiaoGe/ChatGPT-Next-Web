@@ -134,6 +134,7 @@ const DEFAULT_ACCESS_STATE = {
   fileUri: "",
   ct: "",
   fileId: "",
+  contentType: 0,
 
   // tts config
   edgeTTSVoiceName: "zh-CN-YunxiNeural",
@@ -260,6 +261,7 @@ export const useAccessStore = createPersistStore(
       fileName?: string;
       ct?: string;
       fileId?: string;
+      contentType?: number;
     }) => {
       set((state) => {
         return {
@@ -268,12 +270,13 @@ export const useAccessStore = createPersistStore(
             fileName: params.fileName || "",
             ct: params.ct || "",
             fileId: params.fileId || "",
+            contentType: params.contentType,
         }
       });
         console.log("Updated file params:", params);
     },
     currentFileParams() {
-        return  {fileId: get().fileId, fileName: get().fileName, fileUri: get().fileUri, ct: get().ct}
+        return  {fileId: get().fileId, fileName: get().fileName, fileUri: get().fileUri, ct: get().ct, contentType: get().contentType}
     },
     clearFileParams: () => {
       set((state) => ({
@@ -282,6 +285,7 @@ export const useAccessStore = createPersistStore(
         fileName: "",
         ct: "",
         fileId: "",
+        contentType: 0,
       }));
     },
   }),

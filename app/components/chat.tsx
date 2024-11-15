@@ -1130,7 +1130,7 @@ function _Chat() {
 
   useEffect(() => {
     const urlFileId = new URLSearchParams(location.search).get('fileId');
-    const { fileName, fileId } = accessStore.currentFileParams();
+    const { fileName, fileId, fileUri, ct, contentType } = accessStore.currentFileParams();
     const currentSession = chatStore.currentSession();
 
     if (urlFileId && fileName && currentSession?.fileId !== urlFileId) {
@@ -1138,6 +1138,7 @@ function _Chat() {
           urlFileId,
           decodeURIComponent(fileName)
       );
+      uploadCloudFileByUrl(fileUri, fileName, ct, contentType)
     }
     else if (!urlFileId && currentSession?.fileId) {
       const normalSessionIndex = chatStore.sessions.findIndex(s => !s.fileId);
@@ -1735,14 +1736,14 @@ function _Chat() {
     }
   }
 
-  async function uploadCloudFileByUrl(url: string, fileName: string,  ct: string) {
+  async function uploadCloudFileByUrl(url: string, fileName: string,  ct: string, contentType?: number) {
     try {
       console.log("uploadCloudFileByUrl............................")
       let decodeFileName = decodeURIComponent(fileName)
       if (decodeFileName) {
         const tempId = safeLocalStorage().getItem(decodeFileName)
         if (!tempId) {
-          await CloudBaseCache.downloadFile(url, fileName, true, '', ct)
+          await CloudBaseCache.downloadFile(url, fileName, true, '', ct, contentType)
         }
         let userInput = `@${decodeFileName}: 请帮我分析文档的内容。`;
         chatStore.updateCurrentSession((session) => {

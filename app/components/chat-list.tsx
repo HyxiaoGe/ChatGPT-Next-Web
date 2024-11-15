@@ -170,7 +170,8 @@ export function ChatList(props: { narrow?: boolean }) {
                       fileId: session.fileId,
                       fileName: session.topic,
                       fileUri: accessStore.currentFileParams().fileUri,
-                      ct: accessStore.currentFileParams().ct
+                      ct: accessStore.currentFileParams().ct,
+                      contentType: accessStore.currentFileParams().contentType
                     });
                   } else {
                     navigate(Path.Chat);

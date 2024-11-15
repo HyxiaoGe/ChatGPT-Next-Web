@@ -81,33 +81,39 @@ export class CloudBaseCache {
     }
   }
 
-  static async downloadFile(fileUri: string, filename: string, isTempFile: boolean, knowledge_base_name?: string, ct?: string): Promise<void> {
-    try {
-      const path = `/api/content/${fileUri}&fn=${filename}`;
+  static async downloadFile(fileUri: string, filename: string, isTempFile: boolean, knowledge_base_name?: string, ct?: string, contentType?: number): Promise<void> {
+    if (contentType === 0) {
+      try {
+        const path = `/api/content/${fileUri}&fn=${filename}`;
 
-      const response = await fetch(path, {
-        method: "GET",
-        headers: {
-          accept: "application/json",
-          ct: `${ct}`,
-          cv: "4.13.0",
-        },
-      });
+        const response = await fetch(path, {
+          method: "GET",
+          headers: {
+            accept: "application/json",
+            ct: `${ct}`,
+            cv: "4.13.0",
+          },
+        });
 
-      if (response.ok) {
-        const blob = await response.blob();
-        const file = new File([blob], filename, {type: blob.type});
+        if (response.ok) {
+          const blob = await response.blob();
+          const file = new File([blob], filename, {type: blob.type});
 
-        const supportedFileTypes = Object.values(fileTypesConfig.supportedFileTypes).flat();
-        if (!supportedFileTypes.includes(this.getMimeType(filename))) {
-          throw Error('不支持的文件格式');
+          const supportedFileTypes = Object.values(fileTypesConfig.supportedFileTypes).flat();
+          if (!supportedFileTypes.includes(this.getMimeType(filename))) {
+            throw Error('不支持的文件格式');
+          }
+
+          uploadFileToChatChat(file, isTempFile, knowledge_base_name);
         }
-
-        uploadFileToChatChat(file, isTempFile, knowledge_base_name);
+      } catch (error) {
+        console.error("Failed to fetch cloud file base list:", error);
+        throw error;
       }
-    } catch (error) {
-      console.error("Failed to fetch cloud file base list:", error);
-      throw error;
+    } else if (contentType === 1) {
+      console.log("字符串下载")
+      const file = new File([fileUri], filename, {type: 'text/html'});
+      uploadFileToChatChat(file, isTempFile, knowledge_base_name);
     }
   }
 

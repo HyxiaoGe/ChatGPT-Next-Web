@@ -159,7 +159,7 @@ export async function uploadFile(file: File): Promise<string> {
 }
 
 export async function uploadFileToChatChat(file: File, isTempFile: boolean, knowledge_base_name?: string): Promise<void> {
-  console.log("11111111111111111111111111111111")
+  console.log("uploadFileToChatChat...................")
   let path:string;
   const formData = new FormData();
   storage.setItem(decodeURIComponent(file.name), '');
