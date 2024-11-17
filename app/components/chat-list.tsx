@@ -8,7 +8,7 @@ import {
   OnDragEndResponder,
 } from "@hello-pangea/dnd";
 
-import {useAccessStore, useChatStore} from "../store";
+import { useAccessStore, useChatStore } from "../store";
 
 import Locale from "../locales";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -30,7 +30,7 @@ export function ChatItem(props: {
   index: number;
   narrow?: boolean;
   mask: Mask;
-  fileId?:string;
+  fileId?: string;
 }) {
   const draggableRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -117,14 +117,43 @@ export function ChatList(props: { narrow?: boolean }) {
   );
   const chatStore = useChatStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const isMobileScreen = useMobileScreen();
 
   useEffect(() => {
     if (sessions.length > 0) {
-      selectSession(0);
-      navigate(Path.Chat)
+      const urlParams = new URLSearchParams(location.search);
+      console.log("chat-list urlParams: ", urlParams);
+      const urlFileId = urlParams.get("fileId");
+      console.log("chat-list urlFileId: ", urlFileId);
+
+      if (urlFileId) {
+        // 如果有 fileId，找到对应的会话索引
+        const targetSessionIndex = sessions.findIndex(
+          (session) => session.fileId === urlFileId,
+        );
+        console.log("targetSessionIndex: ", targetSessionIndex);
+        if (targetSessionIndex !== -1) {
+          console.log("exist.....");
+          selectSession(targetSessionIndex);
+        } else {
+          console.log("no exist.....");
+          const urlFileName =
+            urlParams.get("fileName") || Locale.Store.DefaultTopic;
+          chatStore.createOrSwitchSession(
+            urlFileId,
+            decodeURIComponent(urlFileName),
+          );
+          console.log("sessions: ", sessions);
+        }
+      } else {
+        console.log("no fileId....");
+        // 如果没有 fileId，选择第一个会话
+        selectSession(0);
+        navigate(Path.Chat);
+      }
     }
-  }, [sessions]);
+  }, [sessions, location.search]);
 
   const onDragEnd: OnDragEndResponder = (result) => {
     const { destination, source } = result;
@@ -160,7 +189,7 @@ export function ChatList(props: { narrow?: boolean }) {
                 id={item.id}
                 index={i}
                 selected={i === selectedIndex}
-                  // ChatList 组件中的点击处理
+                // ChatList 组件中的点击处理
                 onClick={() => {
                   console.log("Before switch - current index:", selectedIndex);
                   selectSession(i);
@@ -168,17 +197,21 @@ export function ChatList(props: { narrow?: boolean }) {
 
                   // 如果是文档分析会话，更新 URL
                   const session = sessions[i];
+                  console.log("chat-list-2 sessions: ", sessions);
                   if (session.fileId) {
-                    navigate({
-                      pathname: Path.Chat,
-                      search: `?fileId=${session.fileId}`,
-                    }, { replace: true });
+                    navigate(
+                      {
+                        pathname: Path.Chat,
+                        search: `?fileId=${session.fileId}`,
+                      },
+                      { replace: true },
+                    );
                     accessStore.setFileParams({
                       fileId: session.fileId,
                       fileName: session.topic,
                       fileUri: accessStore.currentFileParams().fileUri,
                       ct: accessStore.currentFileParams().ct,
-                      contentType: accessStore.currentFileParams().contentType
+                      contentType: accessStore.currentFileParams().contentType,
                     });
                   } else {
                     navigate(Path.Chat);

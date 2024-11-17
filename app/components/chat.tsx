@@ -13,7 +13,6 @@ import SendWhiteIcon from "../icons/send-white.svg";
 import BrainIcon from "../icons/brain.svg";
 import RenameIcon from "../icons/rename.svg";
 import EditIcon from "../icons/rename.svg";
-import ExportIcon from "../icons/share.svg";
 import ReturnIcon from "../icons/return.svg";
 import CopyIcon from "../icons/copy.svg";
 import SpeakIcon from "../icons/speak.svg";
@@ -33,7 +32,6 @@ import PinIcon from "../icons/pin.svg";
 import ConfirmIcon from "../icons/confirm.svg";
 import CloseIcon from "../icons/close.svg";
 import CancelIcon from "../icons/cancel.svg";
-import CloudIcon from "../icons/cloud-success.svg";
 import KnowledgeBaseIcon from "../icons/brain.svg";
 import UploadIcon from "../icons/upload.svg";
 
@@ -74,7 +72,10 @@ import {
   useMobileScreen,
 } from "../utils";
 
-import {uploadFile as uploadFileRemote, uploadFileToChatChat} from "@/app/utils/chat";
+import {
+  uploadFile as uploadFileRemote,
+  uploadFileToChatChat,
+} from "@/app/utils/chat";
 
 import dynamic from "next/dynamic";
 
@@ -95,7 +96,7 @@ import {
   showPrompt,
   showToast,
 } from "./ui-lib";
-import {useLocation, useNavigate} from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   CHAT_PAGE_SIZE,
   DEFAULT_TTS_ENGINE,
@@ -118,9 +119,9 @@ import { createTTSPlayer } from "../utils/audio";
 import { MsEdgeTTS, OUTPUT_FORMAT } from "../utils/ms_edge_tts";
 
 import { isEmpty } from "lodash-es";
-import {YliyunCloud} from "@/app/config/cloud";
-import {CloudBaseCache} from "@/app/store/cloudfiles";
-import {KnowledgeBaseCache} from "@/app/store/knowledgebase";
+import { YliyunCloud } from "@/app/config/cloud";
+import { CloudBaseCache } from "@/app/store/cloudfiles";
+import { KnowledgeBaseCache } from "@/app/store/knowledgebase";
 
 const localStorage = safeLocalStorage();
 
@@ -349,10 +350,13 @@ export function PromptHints(props: {
 }
 
 export function KnowledgeBaseSelector(props: {
-  knowledgeBases: { title: string, content: string }[];
-  onKnowledgeBaseSelect: (knowledgeBase: { title: string, content: string }) => void;
+  knowledgeBases: { title: string; content: string }[];
+  onKnowledgeBaseSelect: (knowledgeBase: {
+    title: string;
+    content: string;
+  }) => void;
 }) {
-  const [ selectIndex, setSelectIndex ] = useState(0);
+  const [selectIndex, setSelectIndex] = useState(0);
   const selectedRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -368,16 +372,19 @@ export function KnowledgeBaseSelector(props: {
       const changeIndex = (delta: number) => {
         e.stopPropagation();
         e.preventDefault();
-        const nextIndex = Math.max(0, Math.min(props.knowledgeBases.length - 1, selectIndex + delta),);
+        const nextIndex = Math.max(
+          0,
+          Math.min(props.knowledgeBases.length - 1, selectIndex + delta),
+        );
         setSelectIndex(nextIndex);
         selectedRef.current?.scrollIntoView({ block: "center" });
       };
 
-      if (e.key === 'ArrayUp') {
+      if (e.key === "ArrayUp") {
         changeIndex(1);
-      } else if (e.key === 'ArrayDown') {
+      } else if (e.key === "ArrayDown") {
         changeIndex(-1);
-      } else if (e.key === 'Enter') {
+      } else if (e.key === "Enter") {
         const selectedKnowledgeBase = props.knowledgeBases.at(selectIndex);
         if (selectedKnowledgeBase) {
           props.onKnowledgeBaseSelect(selectedKnowledgeBase);
@@ -385,31 +392,31 @@ export function KnowledgeBaseSelector(props: {
       }
     };
 
-    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener("keydown", onKeyDown);
 
-    return () => window.removeEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, [props.knowledgeBases.length, selectIndex]);
 
   if (props.knowledgeBases.length === 0) return null;
 
   return (
-      <div className={styles["prompt-hints"]}>
-        {props.knowledgeBases.map((kb, i) => (
-            <div
-                ref={i === selectIndex ? selectedRef : null}
-                className={
-                    styles["prompt-hint"] +
-                    ` ${i === selectIndex ? styles["prompt-hint-selected"] : ""}`
-                }
-                key={kb.title + i.toString()}
-                onClick={() => props.onKnowledgeBaseSelect(kb)}
-                onMouseEnter={() => setSelectIndex(i)}
-            >
-              <div className={styles["hint-title"]}>{kb.title}</div>
-              <div className={styles["hint-content"]}>{kb.content}</div>
-            </div>
-        ))}
-      </div>
+    <div className={styles["prompt-hints"]}>
+      {props.knowledgeBases.map((kb, i) => (
+        <div
+          ref={i === selectIndex ? selectedRef : null}
+          className={
+            styles["prompt-hint"] +
+            ` ${i === selectIndex ? styles["prompt-hint-selected"] : ""}`
+          }
+          key={kb.title + i.toString()}
+          onClick={() => props.onKnowledgeBaseSelect(kb)}
+          onMouseEnter={() => setSelectIndex(i)}
+        >
+          <div className={styles["hint-title"]}>{kb.title}</div>
+          <div className={styles["hint-content"]}>{kb.content}</div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -459,7 +466,9 @@ export function ChatAction(props: {
 
   return (
     <div
-      className={`${styles["chat-input-action"]}  ${styles[props.customClass || ""]} clickable`}
+      className={`${styles["chat-input-action"]}  ${
+        styles[props.customClass || ""]
+      } clickable`}
       onClick={() => {
         props.onClick();
         setTimeout(updateWidth, 1);
@@ -586,8 +595,11 @@ export function ChatActions(props: {
 
   const [showUploadButton, setShowUploadButton] = useState(false);
   const [showCloudUploadButton, setShowCloudUploadButton] = useState(false);
-  const [showKnowledgeBaseSelector, setShowKnowledgeBaseSelector] = useState(false);
-  const [knowledgeBases, setKnowledgeBases] = useState<{ title: string, content: string }[]>([]);
+  const [showKnowledgeBaseSelector, setShowKnowledgeBaseSelector] =
+    useState(false);
+  const [knowledgeBases, setKnowledgeBases] = useState<
+    { title: string; content: string }[]
+  >([]);
   const [showKnowledgeBaseButton, setShowKnowledgeBaseButton] = useState(false);
   const [showSizeSelector, setShowSizeSelector] = useState(false);
   const [showQualitySelector, setShowQualitySelector] = useState(false);
@@ -604,31 +616,39 @@ export function ChatActions(props: {
 
   useEffect(() => {
     const fetchKnowledgeBases = async () => {
-        try {
-            const response = await KnowledgeBaseCache.fetch();
-            setKnowledgeBases(response.data.map(kb => ({ title: kb.kb_name, content: kb.kb_info })));
-        } catch (error) {
-            console.error("Failed to fetch knowledge base list:", error);
-        }
-    }
+      try {
+        const response = await KnowledgeBaseCache.fetch();
+        setKnowledgeBases(
+          response.data.map((kb) => ({
+            title: kb.kb_name,
+            content: kb.kb_info,
+          })),
+        );
+      } catch (error) {
+        console.error("Failed to fetch knowledge base list:", error);
+      }
+    };
     fetchKnowledgeBases();
   }, []);
 
-  const handleKnowledgeBaseSelect = (kb: { title: string, content: string }) => {
+  const handleKnowledgeBaseSelect = (kb: {
+    title: string;
+    content: string;
+  }) => {
     chatStore.updateCurrentSession((session) => {
       session.mask.modelConfig.knowledgeBase = kb.title;
     });
     setShowKnowledgeBaseSelector(false);
-  }
+  };
 
   useEffect(() => {
     const currentPlugin = chatStore.currentSession().mask?.plugin?.at(0);
-    if (currentPlugin !== 'simple-chat') {
+    if (currentPlugin !== "simple-chat") {
       setShowUploadButton(true);
-      if (currentPlugin === 'file-chat') {
+      if (currentPlugin === "file-chat") {
         setShowKnowledgeBaseButton(false);
       }
-      if (currentPlugin === 'knowledge-chat') {
+      if (currentPlugin === "knowledge-chat") {
         setShowKnowledgeBaseButton(true);
       }
       // const cloud = YliyunCloud.getInstance();
@@ -636,9 +656,9 @@ export function ChatActions(props: {
       //   setShowCloudUploadButton(true);
       // }
     } else {
-        setShowUploadButton(false);
-        setShowKnowledgeBaseButton(false);
-        // setShowCloudUploadButton(false);
+      setShowUploadButton(false);
+      setShowKnowledgeBaseButton(false);
+      // setShowCloudUploadButton(false);
     }
     const show = isVisionModel(currentModel);
     if (!show) {
@@ -675,7 +695,7 @@ export function ChatActions(props: {
       )}
 
       {/** 选择prompt**/}
-      {(!isMobileScreen && !props.hitBottom) && (
+      {!isMobileScreen && !props.hitBottom && (
         <ChatAction
           onClick={props.showPromptModal}
           text={Locale.Chat.InputActions.Settings}
@@ -717,26 +737,28 @@ export function ChatActions(props: {
         />
       )}
 
-      {( showKnowledgeBaseButton && (
-          <ChatAction
-            onClick={() => setShowKnowledgeBaseSelector(!showKnowledgeBaseSelector)}
-            text={Locale.Chat.InputActions.KnowledgeBase}
-            icon={props.uploading ? <LoadingButtonIcon /> : <KnowledgeBaseIcon />}
-          />
-        ))}
+      {showKnowledgeBaseButton && (
+        <ChatAction
+          onClick={() =>
+            setShowKnowledgeBaseSelector(!showKnowledgeBaseSelector)
+          }
+          text={Locale.Chat.InputActions.KnowledgeBase}
+          icon={props.uploading ? <LoadingButtonIcon /> : <KnowledgeBaseIcon />}
+        />
+      )}
       {showKnowledgeBaseSelector && (
-          <KnowledgeBaseSelector
-              knowledgeBases={knowledgeBases}
-              onKnowledgeBaseSelect={handleKnowledgeBaseSelect}
-          />
-        )}
+        <KnowledgeBaseSelector
+          knowledgeBases={knowledgeBases}
+          onKnowledgeBaseSelect={handleKnowledgeBaseSelect}
+        />
+      )}
 
       {showUploadButton && (
-      <ChatAction
-        onClick={props.uploadLocalFile}
-        text={Locale.Chat.InputActions.UploadLocalFile}
-        icon={props.uploading ? <LoadingButtonIcon /> : <UploadIcon />}
-      />
+        <ChatAction
+          onClick={props.uploadLocalFile}
+          text={Locale.Chat.InputActions.UploadLocalFile}
+          icon={props.uploading ? <LoadingButtonIcon /> : <UploadIcon />}
+        />
       )}
 
       {/*{showCloudUploadButton && (*/}
@@ -748,40 +770,47 @@ export function ChatActions(props: {
       {/*)}*/}
 
       {/** 聊天窗口主题**/}
-      {!isMobileScreen && <ChatAction
+      {!isMobileScreen && (
+        <ChatAction
           onClick={nextTheme}
           text={Locale.Chat.InputActions.Theme[theme]}
           icon={
             <>
               {theme === Theme.Auto ? (
-                  <AutoIcon />
+                <AutoIcon />
               ) : theme === Theme.Light ? (
-                  <LightIcon />
+                <LightIcon />
               ) : theme === Theme.Dark ? (
-                  <DarkIcon />
+                <DarkIcon />
               ) : null}
             </>
           }
-      />}
+        />
+      )}
 
       {/** 选择prompt**/}
-      {!isMobileScreen &&<ChatAction
-        onClick={props.showPromptHints}
-        text={Locale.Chat.InputActions.Prompt}
-        icon={<PromptIcon />}
-      />}
+      {!isMobileScreen && (
+        <ChatAction
+          onClick={props.showPromptHints}
+          text={Locale.Chat.InputActions.Prompt}
+          icon={<PromptIcon />}
+        />
+      )}
 
       {/** 选择面具**/}
-      {!isMobileScreen &&<ChatAction
-        onClick={() => {
-          navigate(Path.Masks);
-        }}
-        text={Locale.Chat.InputActions.Masks}
-        icon={<MaskIcon />}
-      />}
+      {!isMobileScreen && (
+        <ChatAction
+          onClick={() => {
+            navigate(Path.Masks);
+          }}
+          text={Locale.Chat.InputActions.Masks}
+          icon={<MaskIcon />}
+        />
+      )}
 
       {/** 清除聊天内容**/}
-      {!isMobileScreen && <ChatAction
+      {!isMobileScreen && (
+        <ChatAction
           text={Locale.Chat.InputActions.Clear}
           icon={<ClearIcon />}
           onClick={() => {
@@ -794,14 +823,17 @@ export function ChatActions(props: {
               }
             });
           }}
-      />}
+        />
+      )}
 
       {/** 选择模型按钮**/}
-      {!isMobileScreen && <ChatAction
+      {!isMobileScreen && (
+        <ChatAction
           onClick={() => setShowModelSelector(true)}
           text={currentModelName}
           icon={<RobotIcon />}
-      /> }
+        />
+      )}
 
       {showModelSelector && (
         <Selector
@@ -920,12 +952,12 @@ export function ChatActions(props: {
 
       {/** 滚动到最新**/}
       {!props.hitBottom && (
-          <ChatAction
-              onClick={props.scrollToBottom}
-              customClass={"ab-bottom"}
-              text={Locale.Chat.InputActions.ToBottom}
-              icon={<BottomIcon />}
-          />
+        <ChatAction
+          onClick={props.scrollToBottom}
+          customClass={"ab-bottom"}
+          text={Locale.Chat.InputActions.ToBottom}
+          icon={<BottomIcon />}
+        />
       )}
     </div>
   );
@@ -1129,19 +1161,31 @@ function _Chat() {
   const location = useLocation();
 
   useEffect(() => {
-    const urlFileId = new URLSearchParams(location.search).get('fileId');
-    const { fileName, fileId, fileUri, ct, contentType } = accessStore.currentFileParams();
+    const urlParams = new URLSearchParams(location.search);
+    const urlFileId = urlParams.get("fileId");
+    const urlFileName = urlParams.get("fileName") || Locale.Store.DefaultTopic;
+    const urlFileUri = urlParams.get("fileUri") || "";
+    const urlCt = urlParams.get("ct") || "";
+    const urlContentType = Number(urlParams.get("contentType")) || 0;
+
+    console.log("urlParams: ", {
+      urlFileId,
+      urlFileName,
+      urlFileUri,
+      urlCt,
+      urlContentType,
+    });
+
     const currentSession = chatStore.currentSession();
 
-    if (urlFileId && fileName && currentSession?.fileId !== urlFileId) {
+    if (urlFileId) {
       chatStore.createOrSwitchSession(
-          urlFileId,
-          decodeURIComponent(fileName)
+        urlFileId,
+        decodeURIComponent(urlFileName),
       );
-      uploadCloudFileByUrl(fileUri, fileName, ct, contentType)
-    }
-    else if (!urlFileId && currentSession?.fileId) {
-      const normalSessionIndex = chatStore.sessions.findIndex(s => !s.fileId);
+      uploadCloudFileByUrl(urlFileUri, urlFileName, urlCt, urlContentType);
+    } else if (!urlFileId && currentSession?.fileId) {
+      const normalSessionIndex = chatStore.sessions.findIndex((s) => !s.fileId);
       if (normalSessionIndex !== -1) {
         chatStore.selectSession(normalSessionIndex);
       } else {
@@ -1154,11 +1198,14 @@ function _Chat() {
     const session = chatStore.currentSession();
     if (session?.fileId) {
       const searchParams = new URLSearchParams(location.search);
-      if (session.fileId !== searchParams.get('fileId')) {
-        navigate({
-          pathname: location.pathname,
-          search: `?fileId=${session.fileId}`,
-        }, { replace: true });
+      if (session.fileId !== searchParams.get("fileId")) {
+        navigate(
+          {
+            pathname: location.pathname,
+            search: `?fileId=${session.fileId}`,
+          },
+          { replace: true },
+        );
       }
     }
   }, [chatStore.currentSessionIndex]);
@@ -1189,7 +1236,7 @@ function _Chat() {
       setPromptHints([]);
     } else if (text.match(ChatCommandPrefix)) {
       const currentPlugin = chatStore.currentSession().mask?.plugin?.at(0);
-      if (currentPlugin !== 'simple-chat') {
+      if (currentPlugin !== "simple-chat") {
         const commands = await CloudBaseCache.searchCommands(text);
         setPromptHints(commands);
       }
@@ -1244,7 +1291,7 @@ function _Chat() {
   };
 
   useEffect(() => {
-    if(userInput) {
+    if (userInput) {
       uploadCloudFile();
     }
   }, [userInput]);
@@ -1664,44 +1711,45 @@ function _Chat() {
     const files: string[] = [];
     files.push(...attachFiles);
 
-    const providerName = chatStore.currentSession().mask.modelConfig?.providerName
-    const conversationalMode = chatStore.currentSession().mask.plugin?.[0]
+    const providerName =
+      chatStore.currentSession().mask.modelConfig?.providerName;
+    const conversationalMode = chatStore.currentSession().mask.plugin?.[0];
 
     files.push(
-        ...(await new Promise<string[]>((res, rej) => {
-          const fileInput = document.createElement("input");
-          fileInput.type = "file";
-          fileInput.multiple = true;
-          fileInput.onchange = (event: any) => {
-            setUploading(true);
-            const files = event.target.files;
-            const filesData: string[] = [];
+      ...(await new Promise<string[]>((res, rej) => {
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.multiple = true;
+        fileInput.onchange = (event: any) => {
+          setUploading(true);
+          const files = event.target.files;
+          const filesData: string[] = [];
 
-            for (let i = 0; i < files.length; i++) {
-              const file = event.target.files[i];
-              console.log('providerName: ', providerName)
-              if (providerName === 'CHATCHAT') {
-                let knowledgeBase = ''
-                let tempCache = false;
-                if (conversationalMode === 'file-chat') {
-                  tempCache = true;
-                } else if (conversationalMode === 'knowledge-chat') {
-                  knowledgeBase = session.mask.modelConfig.knowledgeBase
-                  tempCache = false;
-                }
-                uploadFileToChatChat(file, tempCache, knowledgeBase)
+          for (let i = 0; i < files.length; i++) {
+            const file = event.target.files[i];
+            console.log("providerName: ", providerName);
+            if (providerName === "CHATCHAT") {
+              let knowledgeBase = "";
+              let tempCache = false;
+              if (conversationalMode === "file-chat") {
+                tempCache = true;
+              } else if (conversationalMode === "knowledge-chat") {
+                knowledgeBase = session.mask.modelConfig.knowledgeBase;
+                tempCache = false;
               }
-              // 直接使用文件名作为标识
-              filesData.push(file.name);
-
-              if (filesData.length === 3 || filesData.length === files.length) {
-                setUploading(false);
-                res(filesData);
-              }
+              uploadFileToChatChat(file, tempCache, knowledgeBase);
             }
-          };
-          fileInput.click();
-        }))
+            // 直接使用文件名作为标识
+            filesData.push(file.name);
+
+            if (filesData.length === 3 || filesData.length === files.length) {
+              setUploading(false);
+              res(filesData);
+            }
+          }
+        };
+        fileInput.click();
+      })),
     );
 
     const filesLength = files.length;
@@ -1712,51 +1760,69 @@ function _Chat() {
   }
 
   async function uploadCloudFile() {
-    const providerName = chatStore.currentSession().mask.modelConfig?.providerName
-    const conversationalMode = chatStore.currentSession().mask.plugin?.[0]
+    const providerName =
+      chatStore.currentSession().mask.modelConfig?.providerName;
+    const conversationalMode = chatStore.currentSession().mask.plugin?.[0];
     const cloud = YliyunCloud.getInstance();
-    const fileNameWithPath = userInput.split(':')[0];
-    if (fileNameWithPath && fileNameWithPath !== '@') {
-      const fileIdWithVersion = safeLocalStorage().getItem(fileNameWithPath)
+    const fileNameWithPath = userInput.split(":")[0];
+    if (fileNameWithPath && fileNameWithPath !== "@") {
+      const fileIdWithVersion = safeLocalStorage().getItem(fileNameWithPath);
       const fileInfo = fileIdWithVersion?.split(":") as string[];
       if (fileInfo) {
-        if (providerName === 'CHATCHAT') {
-          let knowledgeBase = ''
+        if (providerName === "CHATCHAT") {
+          let knowledgeBase = "";
           let tempCache = false;
-          if (conversationalMode === 'file-chat') {
+          if (conversationalMode === "file-chat") {
             tempCache = true;
-          } else if (conversationalMode === 'knowledge-chat') {
-            knowledgeBase = session.mask.modelConfig.knowledgeBase
+          } else if (conversationalMode === "knowledge-chat") {
+            knowledgeBase = session.mask.modelConfig.knowledgeBase;
             tempCache = false;
           }
-          CloudBaseCache.fetchDownloadFileUrl(fileInfo[0], fileInfo[1], tempCache, knowledgeBase)
-          safeLocalStorage().removeItem(fileNameWithPath)
+          CloudBaseCache.fetchDownloadFileUrl(
+            fileInfo[0],
+            fileInfo[1],
+            tempCache,
+            knowledgeBase,
+          );
+          safeLocalStorage().removeItem(fileNameWithPath);
         }
       }
     }
   }
 
-  async function uploadCloudFileByUrl(url: string, fileName: string,  ct: string, contentType?: number) {
+  async function uploadCloudFileByUrl(
+    url: string,
+    fileName: string,
+    ct: string,
+    contentType?: number,
+  ) {
     try {
-      console.log("uploadCloudFileByUrl............................")
-      let decodeFileName = decodeURIComponent(fileName)
+      console.log("uploadCloudFileByUrl............................");
+      let decodeFileName = decodeURIComponent(fileName);
       if (decodeFileName) {
-        const tempId = safeLocalStorage().getItem(decodeFileName)
+        const tempId = safeLocalStorage().getItem(decodeFileName);
         if (!tempId) {
-          await CloudBaseCache.downloadFile(url, fileName, true, '', ct, contentType)
+          await CloudBaseCache.downloadFile(
+            url,
+            fileName,
+            true,
+            "",
+            ct,
+            contentType,
+          );
         }
         let userInput = `@${decodeFileName}: 请帮我分析文档的内容。`;
         chatStore.updateCurrentSession((session) => {
           if (!session.mask.plugin) {
-            session.mask.plugin = ['file-chat']
+            session.mask.plugin = ["file-chat"];
           } else {
-            session.mask.plugin[0] = 'file-chat'
+            session.mask.plugin[0] = "file-chat";
           }
         });
         doSubmit(userInput);
       }
     } catch (error) {
-      throw error
+      throw error;
     }
   }
 
@@ -1894,20 +1960,20 @@ function _Chat() {
           {/*</div>*/}
           <div className="window-action-button">
             <IconButton
-                icon={<ClearIcon />}
-                bordered
-                title={Locale.Chat.InputActions.Clear}
-                aria={Locale.Chat.InputActions.Clear}
-                onClick={() => {
-                  chatStore.updateCurrentSession((session) => {
-                    if (session.clearContextIndex === session.messages.length) {
-                      session.clearContextIndex = undefined;
-                    } else {
-                      session.clearContextIndex = session.messages.length;
-                      session.memoryPrompt = ""; // will clear memory
-                    }
-                  });
-                }}
+              icon={<ClearIcon />}
+              bordered
+              title={Locale.Chat.InputActions.Clear}
+              aria={Locale.Chat.InputActions.Clear}
+              onClick={() => {
+                chatStore.updateCurrentSession((session) => {
+                  if (session.clearContextIndex === session.messages.length) {
+                    session.clearContextIndex = undefined;
+                  } else {
+                    session.clearContextIndex = session.messages.length;
+                    session.memoryPrompt = ""; // will clear memory
+                  }
+                });
+              }}
             />
           </div>
           {showMaxIcon && (
@@ -2238,7 +2304,6 @@ function _Chat() {
                     className={`${styles["attach-image"]} ${
                       !isImage ? styles["attach-file"] : ""
                     }`}
-
                     style={isImage ? { backgroundImage: `url("${file}")` } : {}}
                   >
                     {!isImage && (
