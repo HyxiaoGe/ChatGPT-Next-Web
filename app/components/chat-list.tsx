@@ -18,6 +18,7 @@ import { Mask } from "../store/mask";
 import { useRef, useEffect } from "react";
 import { showConfirm } from "./ui-lib";
 import { useMobileScreen } from "../utils";
+import {sessionManager} from "@/app/store/SessionOperation";
 
 export function ChatItem(props: {
   onClick?: () => void;
@@ -123,37 +124,28 @@ export function ChatList(props: { narrow?: boolean }) {
   useEffect(() => {
     if (sessions.length > 0) {
       const urlParams = new URLSearchParams(location.search);
-      console.log("chat-list urlParams: ", urlParams);
       const urlFileId = urlParams.get("fileId");
-      console.log("chat-list urlFileId: ", urlFileId);
 
       if (urlFileId) {
-        // 如果有 fileId，找到对应的会话索引
-        const targetSessionIndex = sessions.findIndex(
-          (session) => session.fileId === urlFileId,
-        );
-        console.log("targetSessionIndex: ", targetSessionIndex);
+        const targetSessionIndex = sessions.findIndex((session) => session.fileId === urlFileId);
         if (targetSessionIndex !== -1) {
-          console.log("exist.....");
           selectSession(targetSessionIndex);
-        } else {
-          console.log("no exist.....");
-          const urlFileName =
-            urlParams.get("fileName") || Locale.Store.DefaultTopic;
-          chatStore.createOrSwitchSession(
-            urlFileId,
-            decodeURIComponent(urlFileName),
-          );
-          console.log("sessions: ", sessions);
+        } else if (!sessionManager.isExecuting(urlFileId)) {
+          const urlFileName = urlParams.get("fileName") || Locale.Store.DefaultTopic;
+          sessionManager.registerOperation({
+            type: 'create',
+            fileId: urlFileId,
+            fileName: urlFileName,
+            isProcessed: false
+          })
+          chatStore.createOrSwitchSession(urlFileId, decodeURIComponent(urlFileName))
         }
       } else {
-        console.log("no fileId....");
-        // 如果没有 fileId，选择第一个会话
         selectSession(0);
         navigate(Path.Chat);
       }
     }
-  }, [sessions, location.search]);
+  }, [sessions]);
 
   const onDragEnd: OnDragEndResponder = (result) => {
     const { destination, source } = result;
@@ -161,10 +153,7 @@ export function ChatList(props: { narrow?: boolean }) {
       return;
     }
 
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) {
+    if (destination.droppableId === source.droppableId && destination.index === source.index) {
       return;
     }
 

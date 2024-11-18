@@ -82,6 +82,7 @@ import dynamic from "next/dynamic";
 import { ChatControllerPool } from "../client/controller";
 import { DalleQuality, DalleSize, DalleStyle } from "../typing";
 import { Prompt, usePromptStore } from "../store/prompt";
+import {sessionManager} from "@/app/store/SessionOperation";
 import Locale from "../locales";
 
 import { IconButton } from "./button";
@@ -1164,26 +1165,26 @@ function _Chat() {
     const urlParams = new URLSearchParams(location.search);
     const urlFileId = urlParams.get("fileId");
     const urlFileName = urlParams.get("fileName") || Locale.Store.DefaultTopic;
-    const urlFileUri = urlParams.get("fileUri") || "";
-    const urlCt = urlParams.get("ct") || "";
-    const urlContentType = Number(urlParams.get("contentType")) || 0;
-
-    console.log("urlParams: ", {
-      urlFileId,
-      urlFileName,
-      urlFileUri,
-      urlCt,
-      urlContentType,
-    });
 
     const currentSession = chatStore.currentSession();
 
-    if (urlFileId) {
-      chatStore.createOrSwitchSession(
-        urlFileId,
-        decodeURIComponent(urlFileName),
-      );
-      uploadCloudFileByUrl(urlFileUri, urlFileName, urlCt, urlContentType);
+    if (urlFileId && !sessionManager.isExecuting(urlFileId)) {
+      const pendingOperation = sessionManager.getOperation(urlFileId);
+      if (pendingOperation && !pendingOperation.isProcessed) {
+        sessionManager.setExecuting(urlFileId)
+
+        chatStore.createOrSwitchSession(urlFileId, decodeURIComponent(urlFileName));
+        const urlFileUri = urlParams.get("fileUri") || "";
+        const urlCt = urlParams.get("ct") || "";
+        const urlContentType = Number(urlParams.get("contentType")) || 0;
+
+        uploadCloudFileByUrl(urlFileUri, urlFileName, urlCt, urlContentType)
+            .finally(() => {
+              sessionManager.markAsProcessed(urlFileId);
+              sessionManager.clearOperation(urlFileId);
+              sessionManager.clearExecuting(urlFileId);
+        });
+      }
     } else if (!urlFileId && currentSession?.fileId) {
       const normalSessionIndex = chatStore.sessions.findIndex((s) => !s.fileId);
       if (normalSessionIndex !== -1) {
@@ -1797,19 +1798,11 @@ function _Chat() {
     contentType?: number,
   ) {
     try {
-      console.log("uploadCloudFileByUrl............................");
       let decodeFileName = decodeURIComponent(fileName);
       if (decodeFileName) {
         const tempId = safeLocalStorage().getItem(decodeFileName);
         if (!tempId) {
-          await CloudBaseCache.downloadFile(
-            url,
-            fileName,
-            true,
-            "",
-            ct,
-            contentType,
-          );
+          await CloudBaseCache.downloadFile(url, fileName, true, "", ct, contentType,);
         }
         let userInput = `@${decodeFileName}: 请帮我分析文档的内容。`;
         chatStore.updateCurrentSession((session) => {

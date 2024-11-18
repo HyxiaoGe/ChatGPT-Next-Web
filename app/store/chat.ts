@@ -29,6 +29,7 @@ import { ModelConfig, ModelType, useAppConfig } from "./config";
 import { useAccessStore } from "./access";
 import { collectModelsWithDefaultModel } from "../utils/model";
 import { createEmptyMask, Mask } from "./mask";
+import {sessionManager, SessionOperation} from "@/app/store/SessionOperation";
 import {isEmpty, reject} from "lodash-es";
 
 const localStorage = safeLocalStorage();
@@ -789,13 +790,10 @@ export const useChatStore = createPersistStore(
         return sessions.findIndex(session => session.fileId === fileId);
       },
 
-      createOrSwitchSession(fileId: string, title?: string) {
+      createOrSwitchSession(fileId: string, title?: string, operation?: SessionOperation) {
         set((state) => {
           try {
-            const existingIndex = state.sessions.findIndex(
-                session => session.fileId === fileId
-            );
-
+            const existingIndex = state.sessions.findIndex(session => session.fileId === fileId);
             if (existingIndex !== -1) {
               // 找到已存在的会话，直接切换
               return {
@@ -805,9 +803,18 @@ export const useChatStore = createPersistStore(
             } else {
               // 创建新会话
               const newSession = createEmptySession(title, fileId);
+              if (!sessionManager.getOperation(fileId)) {
+                sessionManager.registerOperation({
+                  type: 'create',
+                  fileId,
+                  fileName: title || '',
+                  isProcessed: false,
+                  ...operation
+                })
+              }
               return {
+                currentSessionIndex: 0,
                 sessions: [newSession, ...state.sessions],
-                currentSessionIndex: 0
               };
             }
           } catch (error) {
