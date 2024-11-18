@@ -7,7 +7,7 @@ import styles from "./home.module.scss";
 import BotIcon from "../icons/bot.svg";
 import LoadingIcon from "../icons/three-dots.svg";
 
-import { getCSSVar, useMobileScreen } from "../utils";
+import {getCSSVar, safeLocalStorage, useMobileScreen} from "../utils";
 
 import dynamic from "next/dynamic";
 import { Path, SlotID } from "../constant";
@@ -241,34 +241,16 @@ function getParam(paramName: any) {
 }
 
 export function Home() {
-  const accessStore = useAccessStore();
 
   useSwitchTheme();
   useLoadData();
   useHtmlLang();
 
   const handleURLParams = useCallback(() => {
-    const fileUri = getParam("fileUri")
-    const fileName = getParam("fileName")
     const ct = getParam("ct")
-    const fileId = getParam("fileId")
-    const contentType = Number(getParam("contentType"))
 
-    console.log({fileUri, fileName, ct, fileId, contentType})
-
-    console.log("11122133213")
-    if (fileId && fileName && fileUri && ct) {
-      console.log("I'm coming!!!!")
-      accessStore.setFileParams({
-        fileUri: decodeURIComponent(fileUri),
-        fileName: decodeURIComponent(fileName),
-        ct,
-        fileId,
-        contentType
-      });
-      console.log("currentFileParams: ", accessStore.currentFileParams())
-    } else {
-      accessStore.clearFileParams();
+    if (ct) {
+      safeLocalStorage().setItem("ct", ct)
     }
   }, []);
 

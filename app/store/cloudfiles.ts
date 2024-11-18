@@ -28,6 +28,8 @@ interface ApiResponse {
 }
 
 export class CloudBaseCache {
+  private static readonly ct = safeLocalStorage().getItem('ct');
+
   static async fetch(fileName: string): Promise<FileItem[]> {
     try {
       const path = `/api/files?fc=personal&key=${fileName}&offset=0&limit=10`;
@@ -36,8 +38,8 @@ export class CloudBaseCache {
         method: "GET",
         headers: {
           accept: "application/json",
-          ct: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjk4LCJ0aW1lIjoxNzMxMjg5MDgzLCJrZXkiOiIxMjM0NTY3NC4xIiwiaXAiOiIxOTIuMTY4LjI1MC4xMjQiLCJkZXZpY2UiOiJ3ZWIiLCJpYXQiOjE3MzEyODkwODN9.jM5-bydh1X2Yok9W2K2v7H1GlaoVo0SKekjDSPF5s6c",
-          cv: "3.6.0",
+          ct: `${this.ct}`,
+          cv: "4.13.0",
         },
       });
 
@@ -46,7 +48,6 @@ export class CloudBaseCache {
         const files = result.data.files.filter(file => file.folder !== 1);
         for (const file of files) {
           safeLocalStorage().setItem(file.filePath + file.fileName, file.fileId + ":" +file.fileVersion);
-          // await this.fetchDownloadFileUrl("personal", file.fileId, file.fileVersion);
         }
         return files.map(( {fileName, filePath} ) => ({fileName, filePath}));
       }
@@ -65,7 +66,7 @@ export class CloudBaseCache {
         method: "GET",
         headers: {
           accept: "application/json",
-          ct: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjk4LCJ0aW1lIjoxNzMxMjk3MTQ2LCJrZXkiOiIxMjM0NTY3NC4xIiwiaXAiOiIxOTIuMTY4LjI1MC4xMjQiLCJkZXZpY2UiOiJ3ZWIiLCJpYXQiOjE3MzEyOTcxNDZ9.r4D9puRwUjb7LnKmEkOYy098c8oD4I0EX_Am2b5Rc30",
+          ct: `${this.ct}`,
           cv: "4.13.0",
         },
       });
