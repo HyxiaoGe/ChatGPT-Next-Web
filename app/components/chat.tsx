@@ -1595,7 +1595,7 @@ function _Chat() {
   const clientConfig = useMemo(() => getClientConfig(), []);
 
   const autoFocus = !isMobileScreen; // wont auto focus on mobile screen
-  const showMaxIcon = !isMobileScreen && !clientConfig?.isApp;
+  const showMaxIcon = !clientConfig?.isApp;
 
   useCommand({
     fill: setUserInput,
@@ -1980,6 +1980,12 @@ function _Chat() {
                   config.update(
                     (config) => (config.tightBorder = !config.tightBorder),
                   );
+
+                  //发送消息来控制缩放
+                  window.parent.postMessage({
+                    type: 'chatMessage',
+                    data: config.tightBorder
+                  }, '*');
                 }}
               />
             </div>

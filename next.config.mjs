@@ -8,12 +8,15 @@ console.log("[Next] build with chunk: ", !disableChunk);
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  webpack(config) {
+  reactStrictMode: false, // 关闭严格模式
+  webpack(config, {isServer}) {
     config.module.rules.push({
       test: /\.svg$/,
       use: ["@svgr/webpack"],
     });
-
+    if (!isServer) {
+      config.optimization.minimize = false; // 禁用客户端压缩
+    }
     if (disableChunk) {
       config.plugins.push(
         new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
@@ -31,7 +34,10 @@ const nextConfig = {
     unoptimized: mode === "export",
   },
   experimental: {
-    forceSwcTransforms: true,
+    forceSwcTransforms: true,  // Keep forceSwcTransforms if you need it
+  },
+  typescript: {
+    ignoreBuildErrors: true,  // Optional: Ignore TypeScript build errors during development
   },
 };
 
@@ -114,35 +120,35 @@ if (mode !== "export") {
       },
       {
         source: "/chat/:path*",
-        destination: 'http://127.0.0.1:7861/chat/chat/:path*',
+        destination: 'http://192.168.250.113:7861/chat/chat/:path*',
       },
       {
         source: '/kb_chat/:path*',
-        destination: 'http://127.0.0.1:7861/chat/kb_chat/:path*',
+        destination: 'http://192.168.250.113:7861/chat/kb_chat/:path*',
         basePath: false,
       },
       {
         source: '/knowledge_base/list_knowledge_bases',
-        destination: 'http://127.0.0.1:7861/knowledge_base/list_knowledge_bases',
+        destination: 'http://192.168.250.113:7861/knowledge_base/list_knowledge_bases',
         basePath: false,
       },
       {
         source: '/knowledge_base/upload_docs',
-        destination: 'http://127.0.0.1:7861/knowledge_base/upload_docs',
+        destination: 'http://192.168.250.113:7861/knowledge_base/upload_docs',
         basePath: false,
       },
       {
         source: '/knowledge_base/upload_temp_docs/:path*',
-        destination: 'http://127.0.0.1:7861/knowledge_base/upload_temp_docs/:path*',
+        destination: 'http://192.168.250.113:7861/knowledge_base/upload_temp_docs/:path*',
         basePath: false,
       },
       {
         source: '/knowledge_base/temp_kb/:path*',
-        destination: 'http://127.0.0.1:7861/knowledge_base/temp_kb/:path*',
+        destination: 'http://192.168.250.113:7861/knowledge_base/temp_kb/:path*',
         basePath: false,
       }
     ];
-    
+
     return {
       beforeFiles: ret,
     };

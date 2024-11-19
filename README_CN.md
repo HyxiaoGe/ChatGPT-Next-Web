@@ -325,3 +325,11 @@ bash <(curl -s https://raw.githubusercontent.com/Yidadaa/ChatGPT-Next-Web/main/s
 ## 开源协议
 
 [MIT](https://opensource.org/license/mit/)
+
+
+
+
+## 问题及解决
+[]上传文件到langchain知识库超时
+https://github.com/chatchat-space/Langchain-Chatchat/issues/3307
+https://github.com/chatchat-space/Langchain-Chatchat/issues/1670
