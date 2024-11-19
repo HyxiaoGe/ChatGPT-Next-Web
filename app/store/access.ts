@@ -273,7 +273,6 @@ export const useAccessStore = createPersistStore(
             contentType: params.contentType,
         }
       });
-        console.log("Updated file params:", params);
     },
     currentFileParams() {
         return  {fileId: get().fileId, fileName: get().fileName, fileUri: get().fileUri, ct: get().ct, contentType: get().contentType}

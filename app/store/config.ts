@@ -67,7 +67,7 @@ export const DEFAULT_CONFIG = {
   modelConfig: {
     model: "qwen1.5-chat" as ModelType,
     providerName: "CHATCHAT" as ServiceProvider,
-    temperature: 0.5,
+    temperature: 0.7,
     top_p: 1,
     top_k: 3,
     score_threshold: 2,

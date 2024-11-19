@@ -30,7 +30,7 @@ interface ApiResponse {
 export class CloudBaseCache {
   private static readonly ct = safeLocalStorage().getItem('ct');
 
-  static async fetch(fileName: string): Promise<FileItem[]> {
+  static async fetchFiles(fileName: string): Promise<FileItem[]> {
     try {
       const path = `/api/files?fc=personal&key=${fileName}&offset=0&limit=10`;
 
@@ -174,7 +174,7 @@ export class CloudBaseCache {
       return [];
     }
     try {
-      const cachedData = await this.fetch(searchText) as any[];
+      const cachedData = await this.fetchFiles(searchText) as any[];
       if (!cachedData || !Array.isArray(cachedData)) {
         return [];
       }

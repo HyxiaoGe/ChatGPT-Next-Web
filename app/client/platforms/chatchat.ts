@@ -117,7 +117,7 @@ export class CHATCHATApi implements LLMApi {
         console.log("current path: ", path)
         const messages = options.messages.map((v) => ({
           role: v.role === "system" ? "user" : v.role,
-          content: getMessageTextContent(v),
+          content: getMessageTextContent(v).replace(/@.*?:/,'').trim(),
         }));
         requestPayload = {
           model: modelConfig.model,
