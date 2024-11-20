@@ -799,15 +799,15 @@ export function ChatActions(props: {
       )}
 
       {/** 选择面具**/}
-      {!isMobileScreen && (
-        <ChatAction
-          onClick={() => {
-            navigate(Path.Masks);
-          }}
-          text={Locale.Chat.InputActions.Masks}
-          icon={<MaskIcon />}
-        />
-      )}
+      {/*{!isMobileScreen && (*/}
+      {/*  <ChatAction*/}
+      {/*    onClick={() => {*/}
+      {/*      navigate(Path.Masks);*/}
+      {/*    }}*/}
+      {/*    text={Locale.Chat.InputActions.Masks}*/}
+      {/*    icon={<MaskIcon />}*/}
+      {/*  />*/}
+      {/*)}*/}
 
       {/** 清除聊天内容**/}
       {!isMobileScreen && (
@@ -1159,10 +1159,9 @@ function _Chat() {
     },
   );
 
-  const location = useLocation();
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(location.search);
+    const urlParams = new URLSearchParams(window.location.search);
     const urlFileId = urlParams.get("fileId");
     const urlFileName = urlParams.get("fileName") || Locale.Store.DefaultTopic;
 
@@ -1170,6 +1169,8 @@ function _Chat() {
 
     if (urlFileId && !sessionManager.isExecuting(urlFileId)) {
       const pendingOperation = sessionManager.getOperation(urlFileId);
+      console.log("pendingOperation: ", pendingOperation)
+
       if (pendingOperation && !pendingOperation.isProcessed) {
         sessionManager.setExecuting(urlFileId)
 

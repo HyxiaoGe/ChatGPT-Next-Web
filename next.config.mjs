@@ -35,6 +35,9 @@ const nextConfig = {
   },
   experimental: {
     forceSwcTransforms: true,  // Keep forceSwcTransforms if you need it
+    allowedRevalidateHeaderKeys: ['Cache-Control'],
+    responseLimit: false,
+    customServer: true,
   },
   typescript: {
     ignoreBuildErrors: true,  // Optional: Ignore TypeScript build errors during development
@@ -118,33 +121,41 @@ if (mode !== "export") {
         source: '/api/content/:path*',
         destination: 'http://192.168.250.217/:path*'
       },
+
       {
         source: "/chat/:path*",
-        destination: 'http://192.168.250.113:7861/chat/chat/:path*',
+        destination: 'http://127.0.0.1:7861/chat/chat/:path*',
+        has: [
+          {
+            type: 'header',
+            key: 'Accept',
+            value: '(.*)(text/event-stream|application/json)(.*)',
+          },
+        ],
       },
       {
         source: '/kb_chat/:path*',
-        destination: 'http://192.168.250.113:7861/chat/kb_chat/:path*',
+        destination: 'http://127.0.0.1:7861/chat/kb_chat/:path*',
         basePath: false,
       },
       {
         source: '/knowledge_base/list_knowledge_bases',
-        destination: 'http://192.168.250.113:7861/knowledge_base/list_knowledge_bases',
+        destination: 'http://127.0.0.1:7861/knowledge_base/list_knowledge_bases',
         basePath: false,
       },
       {
         source: '/knowledge_base/upload_docs',
-        destination: 'http://192.168.250.113:7861/knowledge_base/upload_docs',
+        destination: 'http://127.0.0.1:7861/knowledge_base/upload_docs',
         basePath: false,
       },
       {
         source: '/knowledge_base/upload_temp_docs/:path*',
-        destination: 'http://192.168.250.113:7861/knowledge_base/upload_temp_docs/:path*',
+        destination: 'http://127.0.0.1:7861/knowledge_base/upload_temp_docs/:path*',
         basePath: false,
       },
       {
         source: '/knowledge_base/temp_kb/:path*',
-        destination: 'http://192.168.250.113:7861/knowledge_base/temp_kb/:path*',
+        destination: 'http://127.0.0.1:7861/knowledge_base/temp_kb/:path*',
         basePath: false,
       }
     ];
@@ -153,6 +164,7 @@ if (mode !== "export") {
       beforeFiles: ret,
     };
   };
+
 }
 
 export default nextConfig;

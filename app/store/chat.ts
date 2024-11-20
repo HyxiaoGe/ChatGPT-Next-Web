@@ -378,8 +378,10 @@ export const useChatStore = createPersistStore(
 
         if (modelConfig.providerName === 'CHATCHAT' && plugin?.at(0) === 'file-chat') {
           const fileContent = content.split(':')[0];
-          const regex = /^[\/\@][\u4e00-\u9fa5a-zA-Z0-9_]+(?:\/[\u4e00-\u9fa5a-zA-Z0-9_()（）]+)*\.[a-zA-Z0-9]+$/;
+          console.log("fileContent: ", fileContent)
+          const regex = /^[\/\@][\u4e00-\u9fa5a-zA-Z0-9_\s]+(?:\/[\u4e00-\u9fa5a-zA-Z0-9_()（）\s ]+)*\.[a-zA-Z0-9]+$/;
           if (regex.test(fileContent)) {
+            console.log("I'm in.......")
             attachFiles?.unshift(fileContent.replace(/^@/, '').trim());
           }
         }
@@ -914,7 +916,7 @@ async function fetchWithTimeout(fileName: string, timeout = 120000) {
 
     const intervalId = setInterval(() => {
       const newTempId = localStorage.getItem(decodeURIComponent(fileName));
-      console.log("attempt get newTempId: ", newTempId)
+      console.log("Attempt get " + fileName +  " newTempId: ", newTempId)
       if (!isEmpty(newTempId)) {
         clearInterval(intervalId);
         resolve(newTempId);

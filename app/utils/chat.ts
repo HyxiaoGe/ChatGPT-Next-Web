@@ -1,7 +1,8 @@
 import {
   CACHE_URL_PREFIX,
+  CHATCHAT,
+  REQUEST_TIMEOUT_MS,
   UPLOAD_URL,
-  REQUEST_TIMEOUT_MS, CHATCHAT,
 } from "@/app/constant";
 import { RequestMessage } from "@/app/client/api";
 import Locale from "@/app/locales";
@@ -15,6 +16,15 @@ import fileTypesConfig from "../../public/fileTypes.json";
 import { safeLocalStorage } from "@/app/utils";
 
 const storage = safeLocalStorage();
+
+interface UploadResponse {
+  code: number;
+  data?: {
+    failed_files: string[];
+    id?: string;
+  };
+  msg: string;
+}
 
 export function compressImage(file: Blob, maxSize: number): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -158,55 +168,86 @@ export async function uploadFile(file: File): Promise<string> {
   throw Error(`Upload Error: ${res_1?.msg || "Unknown error"}`);
 }
 
-export async function uploadFileToChatChat(file: File, isTempFile: boolean, knowledge_base_name?: string): Promise<void> {
-  let path:string;
-  const formData = new FormData();
-  storage.setItem(decodeURIComponent(file.name), '');
-  formData.append("files", file);
-  formData.append("chunk_size", "750");
-  formData.append("chunk_overlap", "150");
-  formData.append("zh_title_enhance", "false");
-  if (isTempFile) {
-    path = CHATCHAT.UploadTempFilePath;
-  } else {
-    path = CHATCHAT.UploadFilePath;
-    formData.append("knowledge_base_name", knowledge_base_name!!);
-    formData.append("to_vector_store", "true");
-    formData.append("override", "false");
-    formData.append("not_refresh_vs_cache", "false");
-    formData.append("docs", "");
-  }
+export async function uploadFileToChatChat(
+    file: File,
+    isTempFile: boolean,
+    knowledge_base_name?: string,
+): Promise<void> {
+  const path = isTempFile ? CHATCHAT.UploadTempFilePath : CHATCHAT.UploadFilePath;
+  const MAX_RETRY_COUNT = 3;
+  let currentRetry = 0;
 
   try {
-    const response = await fetch(path, {
-      method: "POST",
-      body: formData,
-      headers: {
-        accept: "application/json",
-      },
-      mode: "cors",
-      credentials: "include",
-    });
-    if (!response.ok) {
-      console.log('response: ', response)
-      throw new Error(`Upload failed with status: ${response.status}`);
+    storage.setItem(decodeURIComponent(file.name), "");
+  } catch (error) {
+    console.error('Failed to set initial storage:', error);
+    throw error;
+  }
+
+  while (currentRetry < MAX_RETRY_COUNT) {
+    const formData = new FormData();
+
+    formData.append("files", file);
+    formData.append("chunk_size", "750");
+    formData.append("chunk_overlap", "150");
+    formData.append("zh_title_enhance", "false");
+
+    if (!isTempFile) {
+      if (knowledge_base_name) {
+        formData.append("knowledge_base_name", knowledge_base_name);
+      }
+      formData.append("to_vector_store", "true");
+      formData.append("override", "false");
+      formData.append("not_refresh_vs_cache", "false");
+      formData.append("docs", "");
     }
 
-    const resJson = await response.json();
+    try {
+      const response = await fetch(path, {
+        method: "POST",
+        body: formData,
+        headers: {
+          accept: "application/json",
+        },
+        mode: "cors",
+        credentials: "include",
+      });
 
-    console.log("[Request] Upload documents response", resJson);
+      if (!response.ok) {
+        console.error("Upload failed response:", response);
+        throw new Error(`Upload failed with status: ${response.status}`);
+      }
 
-    if (isTempFile) {
-      if (resJson.code === 200) {
-        if (resJson.data && resJson.data.id) {
-          const id = resJson.data.id;
-          storage.setItem(decodeURIComponent(file.name), id);
+      const resJson: UploadResponse = await response.json();
+      console.log("[Request] Upload documents response", resJson);
+
+      if (!isTempFile) return;
+
+      if (resJson.code === 200 && resJson.data) {
+        if (resJson.data.failed_files.length > 0) {
+          currentRetry++;
+          continue;
+        }
+
+        if (resJson.data.id) {
+          try {
+            storage.setItem(decodeURIComponent(file.name), resJson.data.id);
+          } catch (error) {
+            console.error('Failed to set file ID in storage:', error);
+            throw error;
+          }
+          return;
         }
       }
+      return;
+    } catch (error) {
+      currentRetry++;
+      if (currentRetry === MAX_RETRY_COUNT) {
+        console.error("[Request] Failed to upload documents after max retries:", error);
+        throw error;
+      }
+      console.warn(`Retry attempt ${currentRetry} of ${MAX_RETRY_COUNT}`);
     }
-  } catch (e) {
-    console.error("[Request] Failed to upload documents", e);
-    throw e;
   }
 }
 
@@ -424,6 +465,7 @@ export function stream(
       openWhenHidden: true,
     });
   }
+
   console.debug("[ChatAPI] start");
   chatApi(chatPath, headers, requestPayload, tools); // call fetchEventSource
 }

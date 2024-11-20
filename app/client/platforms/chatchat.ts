@@ -11,7 +11,7 @@ import {
   ChatOptions,
   getHeaders,
   LLMApi,
-  LLMModel,
+  LLMModel, RequestMessage,
   SpeechOptions,
 } from "../api";
 import Locale from "../../locales";
@@ -72,6 +72,12 @@ export class CHATCHATApi implements LLMApi {
     return res.choices?.at(0)?.message?.content ?? "";
   }
 
+  extractFileNameAndText(message: RequestMessage): string {
+    let msg = getMessageTextContent(message)
+    const matchTxt = msg.match(/[^/]+(?:\.txt):\s*(.*)/);
+    return matchTxt ? matchTxt[0] : '';
+  }
+
   speech(options: SpeechOptions): Promise<ArrayBuffer> {
     throw new Error("Method not implemented.");
   }
@@ -117,7 +123,7 @@ export class CHATCHATApi implements LLMApi {
         console.log("current path: ", path)
         const messages = options.messages.map((v) => ({
           role: v.role === "system" ? "user" : v.role,
-          content: getMessageTextContent(v).replace(/@.*?:/,'').trim(),
+          content: this.extractFileNameAndText(v),
         }));
         requestPayload = {
           model: modelConfig.model,
@@ -240,6 +246,7 @@ export class CHATCHATApi implements LLMApi {
             }
           },
           onmessage(msg) {
+            console.log("msg: ", msg)
             if (msg.data === "[DONE]" || finished) {
               return finish();
             }

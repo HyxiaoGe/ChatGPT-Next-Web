@@ -72,7 +72,7 @@ export class CloudBaseCache {
       });
 
       const result: ApiResponse = await response.json();
-
+      console.log("result: ", result)
       if (result.status === 'ok' && result.data) {
         await this.downloadFile(result.data.fileUri, result.data.fileName, isTempFile, knowledge_base_name);
       }
@@ -82,7 +82,7 @@ export class CloudBaseCache {
     }
   }
 
-  static async downloadFile(fileUri: string, filename: string, isTempFile: boolean, knowledge_base_name?: string, ct?: string, contentType?: number): Promise<void> {
+  static async downloadFile(fileUri: string, filename: string, isTempFile: boolean, knowledge_base_name?: string, ct?: string, contentType: number = 0): Promise<void> {
     if (contentType === 0) {
       try {
         const path = `/api/content/${fileUri}&fn=${filename}`;

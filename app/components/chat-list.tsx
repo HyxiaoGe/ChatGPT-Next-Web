@@ -118,19 +118,20 @@ export function ChatList(props: { narrow?: boolean }) {
   );
   const chatStore = useChatStore();
   const navigate = useNavigate();
-  const location = useLocation();
   const isMobileScreen = useMobileScreen();
 
   useEffect(() => {
     if (sessions.length > 0) {
-      const urlParams = new URLSearchParams(location.search);
+      const urlParams = new URLSearchParams(window.location.search);
       const urlFileId = urlParams.get("fileId");
 
       if (urlFileId) {
         const targetSessionIndex = sessions.findIndex((session) => session.fileId === urlFileId);
+        console.log("chat list targetSessionIndex: ", targetSessionIndex)
         if (targetSessionIndex !== -1) {
           selectSession(targetSessionIndex);
-        } else if (!sessionManager.isExecuting(urlFileId)) {
+          navigate(`/chat?fileId=${urlFileId}`, {replace: true});
+        } else if (!sessionManager.isExecuting(urlFileId) && !sessionManager.getOperation(urlFileId)?.isProcessed) {
           const urlFileName = urlParams.get("fileName") || Locale.Store.DefaultTopic;
           sessionManager.registerOperation({
             type: 'create',
@@ -138,11 +139,14 @@ export function ChatList(props: { narrow?: boolean }) {
             fileName: urlFileName,
             isProcessed: false
           })
-          chatStore.createOrSwitchSession(urlFileId, decodeURIComponent(urlFileName))
+          Promise.resolve().then(() => {
+            chatStore.createOrSwitchSession(urlFileId, decodeURIComponent(urlFileName))
+            navigate(`/chat?fileId=${urlFileId}`, {replace: true});
+          })
         }
       } else {
         selectSession(0);
-        navigate(Path.Chat);
+        navigate(Path.Chat, { replace: true });
       }
     }
   }, [sessions]);
@@ -188,6 +192,12 @@ export function ChatList(props: { narrow?: boolean }) {
                   const session = sessions[i];
                   console.log("chat-list-2 sessions: ", sessions);
                   if (session.fileId) {
+                    sessionManager.registerOperation({
+                      type: 'switch',
+                      fileId: session.fileId,
+                      fileName: session.topic,
+                      isProcessed: false
+                    });
                     navigate(
                       {
                         pathname: Path.Chat,
@@ -195,13 +205,6 @@ export function ChatList(props: { narrow?: boolean }) {
                       },
                       { replace: true },
                     );
-                    accessStore.setFileParams({
-                      fileId: session.fileId,
-                      fileName: session.topic,
-                      fileUri: accessStore.currentFileParams().fileUri,
-                      ct: accessStore.currentFileParams().ct,
-                      contentType: accessStore.currentFileParams().contentType,
-                    });
                   } else {
                     navigate(Path.Chat);
                     accessStore.clearFileParams();
